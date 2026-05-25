@@ -114,6 +114,10 @@
     .lf-popup .evt { border-top: 1px solid #e2e8f0; padding: 5px 0 2px; }
     .lf-popup .evt-name { font-size: 0.78rem; font-weight: 600; color: #2d3748; }
     .lf-popup .evt-date { font-size: 0.7rem; color: #2563eb; }
+    .lf-popup .evt-link { font-size: 0.68rem; color: #2563eb; text-decoration: none; }
+    .lf-popup .evt-link:hover { text-decoration: underline; }
+    .card-link { display: inline-block; margin-left: auto; font-size: 0.68rem; color: #60a5fa; text-decoration: none; white-space: nowrap; padding: 1px 5px; border: 1px solid #2563eb44; border-radius: 4px; }
+    .card-link:hover { background: #1e3a8a; }
 
     /* ── Mobile ── */
     @media (max-width: 700px) {
@@ -259,7 +263,7 @@ function buildMarkers() {
     const inner = acts.map(a => `
       <div class="evt">
         <div class="evt-name">${CAT[a.cat].icon} ${a.name}</div>
-        <div class="evt-date">📅 ${dateRange(a)}</div>
+        <div class="evt-date">📅 ${dateRange(a)}${a.url ? ` <a href="${a.url}" target="_blank" rel="noopener" class="evt-link">詳情 🔗</a>` : ''}</div>
       </div>`).join('');
 
     m.bindPopup(`
@@ -289,7 +293,10 @@ function buildList() {
         <span class="cat-pill cat-${a.cat}">${CAT[a.cat].icon} ${CAT[a.cat].label}</span>
         <span>📅 ${dateRange(a)}</span>
       </div>
-      <div class="card-meta"><span>📍 ${a.venue}・${a.district}</span></div>
+      <div class="card-meta">
+        <span>📍 ${a.venue}・${a.district}</span>
+        ${a.url ? `<a href="${a.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="card-link">詳情 🔗</a>` : ''}
+      </div>
     </div>`).join('');
 }
 
