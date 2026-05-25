@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>高雄6月活動地圖 2026</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="data.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Noto Sans TC', -apple-system, sans-serif; background: #0f1117; color: #e0e0e0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      padding: 10px 20px;
+      display: flex; align-items: center; gap: 16px;
+      border-bottom: 1px solid #2a2a4a;
+      flex-shrink: 0;
+    }
+    header h1 { font-size: 1.2rem; color: #fff; white-space: nowrap; }
+    header p  { font-size: 0.75rem; color: #888; }
+    .badge {
+      background: #e84c3d; color: white;
+      padding: 3px 10px; border-radius: 12px;
+      font-size: 0.75rem; font-weight: bold; white-space: nowrap;
+    }
+
+    /* ── Layout ── */
+    .container { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 340px; min-width: 280px;
+      background: #111827;
+      display: flex; flex-direction: column;
+      border-right: 1px solid #1f2937;
+      overflow: hidden;
+    }
+
+    /* ── Filters ── */
+    .filters {
+      padding: 10px 12px;
+      background: #0f1923;
+      border-bottom: 1px solid #1f2937;
+      flex-shrink: 0;
+    }
+    .filter-label { font-size: 0.68rem; color: #6b7280; margin-bottom: 5px; margin-top: 6px; }
+    .filter-row { display: flex; gap: 5px; flex-wrap: wrap; }
+    .filter-btn {
+      padding: 3px 9px; border-radius: 20px;
+      border: 1px solid #2d3748; background: #1a202c; color: #9ca3af;
+      cursor: pointer; font-size: 0.7rem; transition: all 0.15s;
+    }
+    .filter-btn:hover { filter: brightness(1.2); }
+    .filter-btn.active { color: #fff; }
+    .f-all.active      { background: #374151; border-color: #374151; }
+    .f-concert.active  { background: #ef4444; border-color: #ef4444; }
+    .f-market.active   { background: #f97316; border-color: #f97316; }
+    .f-exhibition.active { background: #22c55e; border-color: #22c55e; }
+    .f-performance.active { background: #3b82f6; border-color: #3b82f6; }
+    .f-expo.active     { background: #a855f7; border-color: #a855f7; }
+    .f-ongoing.active  { background: #6b7280; border-color: #6b7280; }
+    .f-week.active     { background: #0ea5e9; border-color: #0ea5e9; }
+
+    .search-box {
+      width: 100%; padding: 7px 11px;
+      background: #1a202c; border: 1px solid #2d3748;
+      border-radius: 8px; color: #e0e0e0; font-size: 0.8rem;
+      margin-bottom: 6px;
+    }
+    .search-box:focus { outline: none; border-color: #3b82f6; }
+
+    /* ── Count bar ── */
+    .count-bar {
+      font-size: 0.7rem; color: #6b7280;
+      padding: 5px 12px; border-bottom: 1px solid #1f2937;
+      flex-shrink: 0;
+    }
+
+    /* ── Activity list ── */
+    .activity-list { flex: 1; overflow-y: auto; padding: 6px; }
+    .activity-list::-webkit-scrollbar { width: 4px; }
+    .activity-list::-webkit-scrollbar-thumb { background: #374151; border-radius: 2px; }
+
+    .activity-card {
+      background: #1a202c; border-radius: 8px; padding: 9px 11px;
+      margin-bottom: 5px; cursor: pointer;
+      border: 1px solid #2d3748; transition: all 0.12s;
+    }
+    .activity-card:hover { background: #1e3050; border-color: #3b82f6; }
+    .activity-card.active { background: #1e3a5f; border-color: #60a5fa; }
+
+    .card-name { font-size: 0.8rem; font-weight: 600; color: #e2e8f0; margin-bottom: 4px; }
+    .card-meta { font-size: 0.7rem; color: #6b7280; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: 2px; }
+
+    .cat-pill {
+      padding: 1px 7px; border-radius: 10px; font-size: 0.64rem; font-weight: 700;
+    }
+    .cat-concert    { background: #7f1d1d; color: #fca5a5; }
+    .cat-market     { background: #7c2d12; color: #fed7aa; }
+    .cat-exhibition { background: #14532d; color: #86efac; }
+    .cat-performance{ background: #1e3a8a; color: #93c5fd; }
+    .cat-expo       { background: #581c87; color: #d8b4fe; }
+    .cat-ongoing    { background: #374151; color: #d1d5db; }
+
+    /* ── Map ── */
+    #map { flex: 1; }
+
+    /* ── Popup ── */
+    .lf-popup h3 { margin: 0 0 3px; font-size: 0.88rem; color: #1a202c; }
+    .lf-popup .sub { font-size: 0.72rem; color: #6b7280; margin-bottom: 6px; }
+    .lf-popup .evt { border-top: 1px solid #e2e8f0; padding: 5px 0 2px; }
+    .lf-popup .evt-name { font-size: 0.78rem; font-weight: 600; color: #2d3748; }
+    .lf-popup .evt-date { font-size: 0.7rem; color: #2563eb; }
+
+    /* ── Mobile ── */
+    @media (max-width: 700px) {
+      .container { flex-direction: column-reverse; }
+      .sidebar { width: 100%; height: 42vh; border-right: none; border-top: 1px solid #1f2937; }
+      #map { flex: 1; min-height: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>🗺️ 高雄全區活動地圖</h1>
+    <p>2026年 6月1日 ～ 6月30日</p>
+  </div>
+  <span class="badge" id="badgeCount">載入中…</span>
+</header>
+
+<div class="container">
+  <div class="sidebar">
+    <div class="filters">
+      <input class="search-box" id="searchInput" type="text" placeholder="🔍 搜尋活動名稱 / 場館…" />
+
+      <div class="filter-label">類別</div>
+      <div class="filter-row" id="catRow">
+        <button class="filter-btn f-all active"  data-cat="all">全部</button>
+        <button class="filter-btn f-concert"      data-cat="concert">🎤 演唱會</button>
+        <button class="filter-btn f-market"       data-cat="market">🛍️ 市集</button>
+        <button class="filter-btn f-exhibition"   data-cat="exhibition">🖼️ 展覽</button>
+        <button class="filter-btn f-performance"  data-cat="performance">🎭 表演藝術</button>
+        <button class="filter-btn f-expo"         data-cat="expo">🏢 博覽會</button>
+        <button class="filter-btn f-ongoing"      data-cat="ongoing">🔁 長期活動</button>
+      </div>
+
+      <div class="filter-label">週次</div>
+      <div class="filter-row" id="weekRow">
+        <button class="filter-btn f-week active" data-week="all">整月</button>
+        <button class="filter-btn f-week" data-week="1">第1週 6/1–7</button>
+        <button class="filter-btn f-week" data-week="2">第2週 6/8–14</button>
+        <button class="filter-btn f-week" data-week="3">第3週 6/15–21</button>
+        <button class="filter-btn f-week" data-week="4">第4週 6/22–30</button>
+      </div>
+    </div>
+
+    <div class="count-bar" id="countBar">共 0 個活動</div>
+    <div class="activity-list" id="activityList"></div>
+  </div>
+
+  <div id="map"></div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  Leaflet 地圖初始化
+// ══════════════════════════════════════════════
+const map = L.map('map').setView([22.6350, 120.3100], 12);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  maxZoom: 19,
+}).addTo(map);
+
+// ══════════════════════════════════════════════
+//  狀態
+// ══════════════════════════════════════════════
+let activeCat  = 'all';
+let activeWeek = 'all';
+let searchQ    = '';
+let markerMap  = {};   // id → L.marker
+let activeId   = null;
+
+// ══════════════════════════════════════════════
+//  工具函式
+// ══════════════════════════════════════════════
+function dayNum(dateStr) {
+  if (dateStr === '整月') return 1;
+  const parts = dateStr.split('/');
+  return parseInt(parts[parts.length - 1], 10);
+}
+
+function inWeek(a, week) {
+  if (week === 'all') return true;
+  if (a.start === '整月') return true;
+  const ranges = { '1':[1,7], '2':[8,14], '3':[15,21], '4':[22,30] };
+  const [lo, hi] = ranges[week];
+  const s = dayNum(a.start);
+  const e = a.end.startsWith('0') ? dayNum(a.end) : 30;
+  return s <= hi && e >= lo;
+}
+
+function filtered() {
+  return ACTIVITIES.filter(a => {
+    if (activeCat !== 'all' && a.cat !== activeCat) return false;
+    if (!inWeek(a, activeWeek)) return false;
+    if (searchQ) {
+      const q = searchQ.toLowerCase();
+      if (!a.name.toLowerCase().includes(q) && !a.venue.toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+function makeIcon(cat) {
+  const c = CAT[cat];
+  return L.divIcon({
+    className: '',
+    html: `<div style="background:${c.color};border:2px solid #fff;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,.45);cursor:pointer">${c.icon}</div>`,
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+    popupAnchor: [0, -18],
+  });
+}
+
+function dateRange(a) {
+  if (a.start === a.end) return a.start;
+  return `${a.start} ～ ${a.end}`;
+}
+
+// ══════════════════════════════════════════════
+//  渲染：地圖標記
+// ══════════════════════════════════════════════
+function buildMarkers() {
+  Object.values(markerMap).forEach(m => map.removeLayer(m));
+  markerMap = {};
+
+  const list = filtered();
+  // 依座標群組
+  const groups = {};
+  list.forEach(a => {
+    const key = `${a.lat.toFixed(4)}_${a.lng.toFixed(4)}`;
+    (groups[key] = groups[key] || []).push(a);
+  });
+
+  Object.values(groups).forEach(acts => {
+    const { lat, lng, venue, district } = acts[0];
+    // 主導類別（數量最多）
+    const cc = {};
+    acts.forEach(a => cc[a.cat] = (cc[a.cat]||0) + 1);
+    const dom = Object.entries(cc).sort((x,y)=>y[1]-x[1])[0][0];
+
+    const m = L.marker([lat, lng], { icon: makeIcon(dom) }).addTo(map);
+
+    const inner = acts.map(a => `
+      <div class="evt">
+        <div class="evt-name">${CAT[a.cat].icon} ${a.name}</div>
+        <div class="evt-date">📅 ${dateRange(a)}</div>
+      </div>`).join('');
+
+    m.bindPopup(`
+      <div class="lf-popup" style="font-family:sans-serif;min-width:200px">
+        <h3>${venue}</h3>
+        <div class="sub">📍 ${district}　共 ${acts.length} 個活動</div>
+        ${inner}
+      </div>`, { maxWidth: 300 });
+
+    acts.forEach(a => { markerMap[a.id] = m; });
+  });
+}
+
+// ══════════════════════════════════════════════
+//  渲染：側欄列表
+// ══════════════════════════════════════════════
+function buildList() {
+  const list = filtered();
+  document.getElementById('countBar').textContent = `共 ${list.length} 個活動`;
+  document.getElementById('badgeCount').textContent = `${list.length} 個活動`;
+
+  document.getElementById('activityList').innerHTML = list.map(a => `
+    <div class="activity-card${activeId === a.id ? ' active' : ''}"
+         onclick="onCard(${a.id})" data-id="${a.id}">
+      <div class="card-name">${a.name}</div>
+      <div class="card-meta">
+        <span class="cat-pill cat-${a.cat}">${CAT[a.cat].icon} ${CAT[a.cat].label}</span>
+        <span>📅 ${dateRange(a)}</span>
+      </div>
+      <div class="card-meta"><span>📍 ${a.venue}・${a.district}</span></div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════
+//  互動
+// ══════════════════════════════════════════════
+function onCard(id) {
+  activeId = id;
+  const a = ACTIVITIES.find(x => x.id === id);
+  if (!a) return;
+
+  // 更新卡片高亮
+  document.querySelectorAll('.activity-card').forEach(el =>
+    el.classList.toggle('active', +el.dataset.id === id));
+  const el = document.querySelector(`.activity-card[data-id="${id}"]`);
+  if (el) el.scrollIntoView({ behavior:'smooth', block:'nearest' });
+
+  // 飛到地圖位置
+  map.flyTo([a.lat, a.lng], 15, { duration: 0.7 });
+  setTimeout(() => { if (markerMap[id]) markerMap[id].openPopup(); }, 750);
+}
+
+// 類別篩選
+document.getElementById('catRow').addEventListener('click', e => {
+  const btn = e.target.closest('[data-cat]');
+  if (!btn) return;
+  document.querySelectorAll('#catRow [data-cat]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeCat = btn.dataset.cat;
+  render();
+});
+
+// 週次篩選
+document.getElementById('weekRow').addEventListener('click', e => {
+  const btn = e.target.closest('[data-week]');
+  if (!btn) return;
+  document.querySelectorAll('#weekRow [data-week]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeWeek = btn.dataset.week;
+  render();
+});
+
+// 搜尋
+document.getElementById('searchInput').addEventListener('input', e => {
+  searchQ = e.target.value.trim();
+  render();
+});
+
+// ══════════════════════════════════════════════
+//  主渲染
+// ══════════════════════════════════════════════
+function render() {
+  buildMarkers();
+  buildList();
+}
+
+// 確保在所有資源載入完成後執行初始渲染，避免 CDN 載入競態
+window.addEventListener('load', function () {
+  activeCat  = 'all';
+  activeWeek = 'all';
+  searchQ    = '';
+  document.querySelectorAll('#catRow [data-cat]').forEach(b => b.classList.remove('active'));
+  document.querySelector('#catRow [data-cat="all"]').classList.add('active');
+  document.querySelectorAll('#weekRow [data-week]').forEach(b => b.classList.remove('active'));
+  document.querySelector('#weekRow [data-week="all"]').classList.add('active');
+  render();
+  console.log('初始化完成：共', ACTIVITIES.length, '個活動，activeCat=', activeCat);
+});
+</script>
+</body>
+</html>
