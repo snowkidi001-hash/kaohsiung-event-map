@@ -130,14 +130,35 @@
 
     /* ── Mobile ── */
     @media (max-width: 700px) {
+      header { padding: 6px 12px; }
+      header h1 { font-size: 1rem; }
+      header p { font-size: 0.65rem; }
+
       .container { flex-direction: column-reverse; }
       .sidebar {
-        width: 100%; height: 55vh;
+        width: 100%; height: 60vh;
         border-right: none; border-top: 1px solid #1f2937;
         overflow: hidden;
       }
-      .filters { padding: 7px 10px; }
-      .filter-row { gap: 4px; }
+
+      /* 緊湊篩選區 */
+      .filters { padding: 5px 8px 6px; }
+      .filter-label { display: none; }
+      .search-box { padding: 5px 10px; font-size: 0.75rem; margin-bottom: 5px; }
+
+      /* 水平滑動篩選列 */
+      .filter-row {
+        gap: 4px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        margin-bottom: 4px;
+      }
+      .filter-row::-webkit-scrollbar { display: none; }
+      .filter-row:last-child { margin-bottom: 0; }
+      .filter-btn { white-space: nowrap; flex-shrink: 0; }
+
       #map { flex: 1; min-height: 0; }
     }
   </style>
