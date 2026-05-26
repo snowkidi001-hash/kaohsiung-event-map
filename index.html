@@ -121,69 +121,24 @@
     .lf-popup .evt-date { font-size: 0.7rem; color: #2563eb; }
     .lf-popup .evt-link { font-size: 0.68rem; color: #2563eb; text-decoration: none; }
     .lf-popup .evt-link:hover { text-decoration: underline; }
-    .card-link { display: inline-block; margin-left: auto; font-size: 0.68rem; color: #60a5fa; text-decoration: none; white-space: nowrap; padding: 1px 5px; border: 1px solid #2563eb44; border-radius: 4px; }
+    .card-link { display: inline-block; font-size: 0.68rem; color: #60a5fa; text-decoration: none; white-space: nowrap; padding: 1px 5px; border: 1px solid #2563eb44; border-radius: 4px; }
     .card-link:hover { background: #1e3a8a; }
-
-    /* ── Sheet handle (hidden on desktop) ── */
-    .sheet-handle { display: none; }
+    .card-nav { display: inline-block; font-size: 0.68rem; color: #fbbf24; text-decoration: none; white-space: nowrap; padding: 1px 5px; border: 1px solid #fbbf2444; border-radius: 4px; margin-left: auto; }
+    .card-nav:hover { background: #78350f; }
+    .lf-popup .evt-nav { font-size: 0.68rem; color: #ca8a04; text-decoration: none; margin-left: 6px; }
+    .lf-popup .evt-nav:hover { text-decoration: underline; }
 
     /* ── Mobile ── */
     @media (max-width: 700px) {
-      header { padding: 6px 12px; }
-      header p { display: none; }
-      header h1 { font-size: 1rem; }
-
-      .container { display: block; }
-      #map { width: 100%; height: 100%; }
-
-      /* 底部抽屜 */
+      .container { flex-direction: column-reverse; }
       .sidebar {
-        position: fixed;
-        bottom: 0; left: 0; right: 0;
-        width: 100%; height: 65vh;
-        border-radius: 16px 16px 0 0;
-        border-right: none;
-        box-shadow: 0 -4px 20px rgba(0,0,0,0.55);
-        transform: translateY(calc(65vh - 78px));
-        transition: transform 0.32s cubic-bezier(0.4,0,0.2,1);
-        z-index: 1000;
+        width: 100%; height: 55vh;
+        border-right: none; border-top: 1px solid #1f2937;
         overflow: hidden;
       }
-      .sidebar.sheet-open { transform: translateY(0); }
-
-      /* 收合時隱藏搜尋、週次、計數列 */
-      .sidebar:not(.sheet-open) .search-box { display: none; }
-      .sidebar:not(.sheet-open) #weekRow    { display: none; }
-      .sidebar:not(.sheet-open) .filter-label { display: none; }
-      .sidebar:not(.sheet-open) .count-bar  { display: none; }
-      .sidebar:not(.sheet-open) .activity-list { display: none; }
-
-      /* 拖曳把手 */
-      .sheet-handle {
-        display: flex; flex-direction: column; align-items: center;
-        padding: 8px 14px 6px;
-        cursor: pointer; flex-shrink: 0; user-select: none;
-      }
-      .sheet-drag-bar {
-        width: 36px; height: 4px;
-        background: #4b5563; border-radius: 2px; margin-bottom: 8px;
-      }
-      .sheet-peek-info {
-        display: flex; justify-content: space-between;
-        align-items: center; width: 100%;
-        font-size: 0.75rem; color: #9ca3af;
-      }
-
-      /* 篩選列改為水平滑動 */
-      .filters { padding: 4px 10px 8px; }
-      .filter-label { font-size: 0.65rem; margin: 4px 0 3px; }
-      .filter-row {
-        overflow-x: auto; flex-wrap: nowrap;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-      }
-      .filter-row::-webkit-scrollbar { display: none; }
-      .filter-btn { white-space: nowrap; }
+      .filters { padding: 7px 10px; }
+      .filter-row { gap: 4px; }
+      #map { flex: 1; min-height: 0; }
     }
   </style>
 </head>
@@ -199,13 +154,6 @@
 
 <div class="container">
   <div class="sidebar" id="sidebar">
-    <div class="sheet-handle" id="sheetHandle">
-      <div class="sheet-drag-bar"></div>
-      <div class="sheet-peek-info">
-        <span>📋 活動清單</span>
-        <span id="sheetCount">載入中…</span>
-      </div>
-    </div>
     <div class="filters">
       <input class="search-box" id="searchInput" type="text" placeholder="🔍 搜尋活動名稱 / 場館…" />
 
@@ -327,11 +275,12 @@ function buildMarkers() {
 
     const m = L.marker([lat, lng], { icon: makeIcon(dom) }).addTo(map);
 
+    const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
     const inner = acts.map(a => `
       <div class="evt">
         <div class="evt-name">${CAT[a.cat].icon} ${a.name}</div>
         <div class="evt-date">📅 ${dateRange(a)}${a.url ? ` <a href="${a.url}" target="_blank" rel="noopener" class="evt-link">詳情 🔗</a>` : ''}</div>
-      </div>`).join('');
+      </div>`).join('') + `<div style="border-top:1px solid #e2e8f0;padding-top:6px;margin-top:4px;text-align:right"><a href="${navUrl}" target="_blank" rel="noopener" class="evt-nav">🧭 從這裡導航</a></div>`;
 
     m.bindPopup(`
       <div class="lf-popup" style="font-family:sans-serif;min-width:200px">
@@ -351,7 +300,6 @@ function buildList() {
   const list = filtered();
   document.getElementById('countBar').textContent = `共 ${list.length} 個活動`;
   document.getElementById('badgeCount').textContent = `${list.length} 個活動`;
-  document.getElementById('sheetCount').textContent = `${list.length} 個活動`;
 
   document.getElementById('activityList').innerHTML = list.map(a => `
     <div class="activity-card${activeId === a.id ? ' active' : ''}"
@@ -364,6 +312,7 @@ function buildList() {
       <div class="card-meta">
         <span>📍 ${a.venue}・${a.district}</span>
         ${a.url ? `<a href="${a.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="card-link">詳情 🔗</a>` : ''}
+        <a href="https://www.google.com/maps/dir/?api=1&destination=${a.lat},${a.lng}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="card-nav">🧭 導航</a>
       </div>
     </div>`).join('');
 }
@@ -422,11 +371,6 @@ function render() {
 }
 
 // 確保在所有資源載入完成後執行初始渲染，避免 CDN 載入競態
-// 手機底部抽屜開關
-document.getElementById('sheetHandle').addEventListener('click', function() {
-  document.getElementById('sidebar').classList.toggle('sheet-open');
-});
-
 // 防止側欄觸控事件傳遞到 Leaflet 地圖（Android 修正）
 document.getElementById('activityList').addEventListener('touchstart', function(e) {
   e.stopPropagation();
