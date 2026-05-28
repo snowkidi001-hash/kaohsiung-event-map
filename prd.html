@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PRD 撰寫工具 — 高雄活動地圖</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans TC', -apple-system, sans-serif;
+      background: #0f1117; color: #e0e0e0; line-height: 1.65;
+    }
+
+    header {
+      position: sticky; top: 0; z-index: 100;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      padding: 12px 20px;
+      border-bottom: 1px solid #2a2a4a;
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 12px; flex-wrap: wrap;
+    }
+    header h1 { font-size: 1.05rem; color: #fff; white-space: nowrap; }
+
+    .actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    button {
+      background: #3b82f6; color: white; border: none;
+      padding: 6px 14px; border-radius: 6px; cursor: pointer;
+      font-size: 0.82rem; transition: background 0.15s;
+    }
+    button:hover { background: #2563eb; }
+    button.success { background: #16a34a; }
+    button.success:hover { background: #15803d; }
+    button.danger { background: #6b7280; }
+    button.danger:hover { background: #ef4444; }
+    button.ghost { background: transparent; border: 1px solid #374151; color: #cbd5e1; }
+    button.ghost:hover { background: #1f2937; }
+
+    .save-status { font-size: 0.72rem; color: #22c55e; }
+    .save-status.saving { color: #fbbf24; }
+
+    .container { max-width: 880px; margin: 0 auto; padding: 18px 18px 60px; }
+
+    .progress {
+      background: #1a202c; padding: 12px 16px;
+      border-radius: 10px; margin-bottom: 18px;
+      border: 1px solid #2d3748;
+    }
+    .progress-text {
+      font-size: 0.8rem; color: #9ca3af;
+      display: flex; justify-content: space-between;
+    }
+    .progress-bar {
+      height: 6px; background: #2d3748;
+      border-radius: 3px; overflow: hidden; margin-top: 8px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #3b82f6, #22c55e);
+      transition: width 0.4s ease;
+    }
+
+    .tip-banner {
+      background: #1e3a5f; border: 1px solid #3b82f644;
+      padding: 10px 14px; border-radius: 8px;
+      margin-bottom: 14px; font-size: 0.8rem; color: #cbd5e1;
+    }
+    .tip-banner b { color: #60a5fa; }
+
+    section.prd-section {
+      background: #1a202c;
+      border: 1px solid #2d3748;
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin-bottom: 14px;
+    }
+    section.prd-section h2 {
+      font-size: 1.05rem; color: #60a5fa;
+      margin-bottom: 12px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    section.prd-section h3 {
+      font-size: 0.9rem; color: #e2e8f0;
+      margin: 12px 0 8px;
+    }
+
+    .hint {
+      background: #1e3a5f1a; border-left: 3px solid #3b82f6;
+      padding: 8px 12px; font-size: 0.82rem; color: #cbd5e1;
+      margin-bottom: 8px; border-radius: 4px;
+    }
+    .example {
+      background: #2d24101a; border-left: 3px solid #fbbf24;
+      padding: 8px 12px; font-size: 0.8rem; color: #cbd5e1;
+      margin-bottom: 10px; border-radius: 4px;
+      white-space: pre-line;
+    }
+    .example b { color: #fbbf24; }
+
+    textarea, input[type="text"], input[type="date"] {
+      width: 100%;
+      background: #0f1923;
+      border: 1px solid #2d3748;
+      color: #e0e0e0;
+      padding: 9px 12px;
+      border-radius: 6px;
+      font-family: inherit; font-size: 0.88rem;
+      transition: border 0.15s;
+    }
+    textarea { min-height: 100px; resize: vertical; line-height: 1.6; }
+    textarea:focus, input:focus { outline: none; border-color: #3b82f6; }
+
+    .meta-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+    }
+    .meta-row label {
+      display: block; font-size: 0.72rem;
+      color: #9ca3af; margin-bottom: 4px;
+    }
+
+    .checklist { list-style: none; padding: 0; }
+    .checklist li {
+      padding: 5px 0; font-size: 0.87rem;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .checklist input[type="checkbox"] {
+      width: 16px; height: 16px; accent-color: #22c55e;
+      cursor: pointer;
+    }
+
+    footer {
+      text-align: center; padding: 24px 20px;
+      color: #6b7280; font-size: 0.78rem;
+      border-top: 1px solid #1f2937; margin-top: 30px;
+    }
+
+    .back-link {
+      display: inline-block; color: #60a5fa;
+      text-decoration: none; font-size: 0.78rem;
+      margin-top: 6px;
+    }
+    .back-link:hover { text-decoration: underline; }
+
+    @media (max-width: 600px) {
+      header { padding: 10px 14px; }
+      header h1 { font-size: 0.92rem; }
+      .container { padding: 12px; }
+      section.prd-section { padding: 14px 16px; }
+      button { padding: 5px 10px; font-size: 0.78rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>📋 PRD：高雄活動地圖</h1>
+  <div class="actions">
+    <span class="save-status" id="saveStatus">已自動儲存 ✓</span>
+    <button class="success" onclick="exportMarkdown()">💾 匯出</button>
+    <button onclick="document.getElementById('importInput').click()">📥 匯入</button>
+    <input type="file" id="importInput" accept=".md,.txt" style="display:none" onchange="importMarkdown(event)" />
+    <button class="ghost" onclick="window.location.href='index.html'">↩ 回地圖</button>
+    <button class="danger" onclick="resetAll()">🔄 重置</button>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="tip-banner">
+    💡 <b>跨裝置使用方式</b>：在這台電腦寫完後點「💾 匯出」下載 .md 檔，
+    傳到另一台電腦（Email / 雲端硬碟 / LINE Keep），開啟同一個網頁後點「📥 匯入」載入檔案即可繼續寫。
+  </div>
+
+  <div class="progress">
+    <div class="progress-text">
+      <span>📊 完成進度</span>
+      <span id="progressLabel">0 / 11 節已填寫</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+
+  <!-- 文件資訊 -->
+  <section class="prd-section">
+    <h2>📄 文件資訊</h2>
+    <div class="meta-row">
+      <div>
+        <label>撰寫人</label>
+        <input type="text" id="m_author" placeholder="你的名字" />
+      </div>
+      <div>
+        <label>日期</label>
+        <input type="date" id="m_date" />
+      </div>
+      <div>
+        <label>版本</label>
+        <input type="text" id="m_version" placeholder="v0.1" />
+      </div>
+      <div>
+        <label>狀態</label>
+        <input type="text" id="m_status" placeholder="草稿" />
+      </div>
+    </div>
+  </section>
+
+  <!-- 1 -->
+  <section class="prd-section">
+    <h2>1. 產品概觀</h2>
+    <div class="hint">💡 用 1-2 句話描述「這是什麼產品、給誰用、解決什麼」。不要寫太技術，要讓你媽看得懂。</div>
+    <div class="example"><b>📌 範例：</b>Uber Eats 是給忙碌上班族的外送平台，讓他們不用出門就能點到附近餐廳的餐點。</div>
+    <textarea id="s1" placeholder="在這裡寫你的版本..."></textarea>
+  </section>
+
+  <!-- 2 -->
+  <section class="prd-section">
+    <h2>2. 背景與動機</h2>
+    <div class="hint">💡 使用者目前怎麼完成這件事？有什麼不便？為什麼需要新的解法？</div>
+    <div class="example"><b>📌 範例思路：</b>想知道高雄這個月有什麼活動，要去多個官網分別查；即使查到也不知道地點在哪、離我家近不近；缺一個「統一視覺化」的工具。</div>
+    <textarea id="s2" placeholder="在這裡寫..."></textarea>
+  </section>
+
+  <!-- 3 -->
+  <section class="prd-section">
+    <h2>3. 目標使用者</h2>
+    <div class="hint">💡 描述主要使用者（Persona）。挑最重要的 1-2 種。</div>
+    <div class="example"><b>📌 範例格式：</b>
+- 姓名（虛構）：王小明
+- 年齡 / 職業：32 歲 / 軟體工程師
+- 居住地：高雄苓雅區
+- 使用情境：週末想找活動帶女友去
+- 痛點：不知道高雄有什麼好玩的、不想跑太遠
+- 目標：花最少時間找到適合的活動</div>
+    <textarea id="s3" placeholder="可以寫 1-2 個 Persona..."></textarea>
+  </section>
+
+  <!-- 4 -->
+  <section class="prd-section">
+    <h2>4. 產品目標</h2>
+    <div class="hint">💡 使用者目標：讓使用者得到什麼好處？業務目標：對你（產品擁有者）的好處？</div>
+    <div class="example"><b>📌 範例：</b>
+使用者目標：3 分鐘內找到本月適合的活動並知道怎麼去。
+業務目標：累積高雄活動資料庫 / 練習產品開發與 PM 技能 / 未來可作為導流入口。</div>
+    <textarea id="s4" placeholder="在這裡寫..."></textarea>
+  </section>
+
+  <!-- 5 -->
+  <section class="prd-section">
+    <h2>5. 成功指標（KPI）</h2>
+    <div class="hint">💡 怎麼判斷產品「成功」？用可量化的數字。（這節先寫粗略，任務 #2 會深入做）</div>
+    <div class="example"><b>📌 範例：</b>
+- 月活躍使用者（MAU）≥ 500
+- 平均停留時間 ≥ 2 分鐘
+- 導航按鈕點擊率 ≥ 15%
+- 月回訪率 ≥ 30%</div>
+    <textarea id="s5" placeholder="寫 3-5 個指標..."></textarea>
+  </section>
+
+  <!-- 6 -->
+  <section class="prd-section">
+    <h2>6. 功能範圍</h2>
+
+    <h3>6.1 MVP 已實作功能（複習）</h3>
+    <ul class="checklist">
+      <li><input type="checkbox" id="f1"><label for="f1">互動地圖（Leaflet + OSM）</label></li>
+      <li><input type="checkbox" id="f2"><label for="f2">活動列表（左側欄）</label></li>
+      <li><input type="checkbox" id="f3"><label for="f3">類別篩選（演唱會、市集、展覽等 6 類）</label></li>
+      <li><input type="checkbox" id="f4"><label for="f4">週次篩選（第 1-4 週）</label></li>
+      <li><input type="checkbox" id="f5"><label for="f5">關鍵字搜尋</label></li>
+      <li><input type="checkbox" id="f6"><label for="f6">活動詳細資訊連結</label></li>
+      <li><input type="checkbox" id="f7"><label for="f7">Google Maps 導航</label></li>
+      <li><input type="checkbox" id="f8"><label for="f8">手機版 RWD</label></li>
+    </ul>
+
+    <h3>6.2 未來想做但目前不做</h3>
+    <div class="example"><b>📌 範例：</b>收藏活動 / 行事曆匯出 / 推播提醒 / 多月份切換 / 多城市擴充</div>
+    <textarea id="s6_future" placeholder="列出腦中閃過但「現在還不要做」的功能..."></textarea>
+  </section>
+
+  <!-- 7 -->
+  <section class="prd-section">
+    <h2>7. 使用者故事（User Stories）</h2>
+    <div class="hint">💡 用「身為 X，我想要 Y，以便 Z」的格式寫。每條對應一個功能背後的動機。</div>
+    <div class="example"><b>📌 範例：</b>
+- 身為高雄居民，我想要看到本月所有活動在地圖上的位置，以便判斷哪些離我近。
+- 身為外地遊客，我想要篩選演唱會類別，以便規劃週末南下行程。
+- 身為親子家庭，我想要點擊活動直接打開導航，以便省去複製貼上地址的麻煩。</div>
+    <textarea id="s7" placeholder="寫 3-5 條..."></textarea>
+  </section>
+
+  <!-- 8 -->
+  <section class="prd-section">
+    <h2>8. 非功能需求</h2>
+    <div class="hint">💡「不是功能但很重要」的要求。</div>
+    <div class="example"><b>📌 通常包含：</b>
+- 效能：頁面 3 秒內載入
+- 相容性：支援 Chrome、Safari、Edge 最新版
+- 行動裝置：手機正常使用
+- 無障礙：色盲友善
+- 更新頻率：每月 1 號前更新下月活動</div>
+    <textarea id="s8" placeholder="在這裡寫..."></textarea>
+  </section>
+
+  <!-- 9 -->
+  <section class="prd-section">
+    <h2>9. 假設與限制</h2>
+    <div class="hint">💡 你做這個產品時做的假設、已知的限制。</div>
+    <div class="example"><b>📌 範例：</b>
+假設：使用者主要透過手機瀏覽 / 使用者有基本智慧型手機操作能力
+限制：一人開發、業餘時間維護 / 無預算購買付費服務 / 活動資料需手動更新</div>
+    <textarea id="s9" placeholder="在這裡寫..."></textarea>
+  </section>
+
+  <!-- 10 -->
+  <section class="prd-section">
+    <h2>10. 風險與緩解</h2>
+    <div class="hint">💡 可能會搞砸的事 + 怎麼預防。</div>
+    <div class="example"><b>📌 範例：</b>
+- 忘記每月更新資料 → 設行事曆提醒
+- Netlify 免費額度用完 → 監控流量、預備替代方案
+- 活動資訊有誤 → 加註「資訊以官網為準」</div>
+    <textarea id="s10" placeholder="列出 3-5 個風險與對策..."></textarea>
+  </section>
+
+  <!-- 11 -->
+  <section class="prd-section">
+    <h2>11. 上線後計畫</h2>
+    <div class="hint">💡 產品上線後要怎麼維運、收回饋、迭代。</div>
+    <div class="example"><b>📌 範例：</b>
+- 資料更新：每月 25 號開始準備下月活動，1 號前上線
+- 回饋收集：頁面底部加意見表單
+- 數據監控：每週看一次 GA 報表
+- 迭代節奏：每月一次小更新</div>
+    <textarea id="s11" placeholder="在這裡寫..."></textarea>
+  </section>
+
+</div>
+
+<footer>
+  💾 內容自動儲存於目前瀏覽器（localStorage）<br>
+  跨裝置請使用「匯出 / 匯入」傳輸 .md 檔<br>
+  <a class="back-link" href="index.html">↩ 回到活動地圖</a>
+</footer>
+
+<script>
+const FIELDS = [
+  'm_author','m_date','m_version','m_status',
+  's1','s2','s3','s4','s5',
+  's6_future','s7','s8','s9','s10','s11'
+];
+const CHECKBOXES = ['f1','f2','f3','f4','f5','f6','f7','f8'];
+const STORAGE_KEY = 'prd-kaohsiung-events-v1';
+const SECTIONS_FOR_PROGRESS = ['s1','s2','s3','s4','s5','s6_future','s7','s8','s9','s10','s11'];
+const TOTAL = SECTIONS_FOR_PROGRESS.length;
+
+function loadData() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) {
+    document.getElementById('m_date').valueAsDate = new Date();
+    document.getElementById('m_version').value = 'v0.1';
+    document.getElementById('m_status').value = '草稿';
+    updateProgress();
+    return;
+  }
+  try {
+    const data = JSON.parse(raw);
+    FIELDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && data[id] !== undefined) el.value = data[id];
+    });
+    CHECKBOXES.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && data[id] !== undefined) el.checked = data[id];
+    });
+  } catch (e) { console.error(e); }
+  updateProgress();
+}
+
+let saveTimer = null;
+function saveData() {
+  const data = {};
+  FIELDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) data[id] = el.value;
+  });
+  CHECKBOXES.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) data[id] = el.checked;
+  });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  const status = document.getElementById('saveStatus');
+  status.textContent = '已自動儲存 ✓';
+  status.classList.remove('saving');
+}
+
+function onChange() {
+  const status = document.getElementById('saveStatus');
+  status.textContent = '儲存中...';
+  status.classList.add('saving');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => { saveData(); updateProgress(); }, 500);
+}
+
+function updateProgress() {
+  let filled = 0;
+  SECTIONS_FOR_PROGRESS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.value.trim().length >= 10) filled++;
+  });
+  const pct = Math.round(filled / TOTAL * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `${filled} / ${TOTAL} 節已填寫（${pct}%）`;
+}
+
+// ══════════════════════════════════════════════
+//  匯出 Markdown
+// ══════════════════════════════════════════════
+function exportMarkdown() {
+  const get = id => document.getElementById(id).value.trim();
+  const author  = get('m_author')  || '（未填）';
+  const date    = get('m_date')    || '（未填）';
+  const version = get('m_version') || 'v0.1';
+  const status  = get('m_status')  || '草稿';
+
+  const checkedList = [
+    { id:'f1', label:'互動地圖（Leaflet + OSM）' },
+    { id:'f2', label:'活動列表（左側欄）' },
+    { id:'f3', label:'類別篩選（演唱會、市集、展覽等 6 類）' },
+    { id:'f4', label:'週次篩選(第 1-4 週)' },
+    { id:'f5', label:'關鍵字搜尋' },
+    { id:'f6', label:'活動詳細資訊連結' },
+    { id:'f7', label:'Google Maps 導航' },
+    { id:'f8', label:'手機版 RWD' },
+  ].map(x => `- [${document.getElementById(x.id).checked ? 'x' : ' '}] ${x.label}`).join('\n');
+
+  const md = `<!-- PRD-DATA-START
+${JSON.stringify(getDataObj())}
+PRD-DATA-END -->
+
+# PRD：高雄活動地圖
+
+> 撰寫人：${author}
+> 日期：${date}
+> 版本：${version}
+> 狀態：${status}
+
+---
+
+## 1. 產品概觀
+
+${get('s1') || '（待填）'}
+
+## 2. 背景與動機
+
+${get('s2') || '（待填）'}
+
+## 3. 目標使用者
+
+${get('s3') || '（待填）'}
+
+## 4. 產品目標
+
+${get('s4') || '（待填）'}
+
+## 5. 成功指標（KPI）
+
+${get('s5') || '（待填）'}
+
+## 6. 功能範圍
+
+### 6.1 MVP 已實作功能
+
+${checkedList}
+
+### 6.2 未來想做但目前不做
+
+${get('s6_future') || '（待填）'}
+
+## 7. 使用者故事
+
+${get('s7') || '（待填）'}
+
+## 8. 非功能需求
+
+${get('s8') || '（待填）'}
+
+## 9. 假設與限制
+
+${get('s9') || '（待填）'}
+
+## 10. 風險與緩解
+
+${get('s10') || '（待填）'}
+
+## 11. 上線後計畫
+
+${get('s11') || '（待填）'}
+`;
+
+  const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `PRD-活動地圖-${date || 'draft'}.md`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function getDataObj() {
+  const data = {};
+  FIELDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) data[id] = el.value;
+  });
+  CHECKBOXES.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) data[id] = el.checked;
+  });
+  return data;
+}
+
+// ══════════════════════════════════════════════
+//  匯入 Markdown（讀取 .md 中的隱藏資料區塊）
+// ══════════════════════════════════════════════
+function importMarkdown(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    const match = text.match(/<!-- PRD-DATA-START\s*([\s\S]*?)\s*PRD-DATA-END -->/);
+    if (!match) {
+      alert('❌ 這個檔案不是從本工具匯出的 PRD（找不到資料區塊）');
+      return;
+    }
+    try {
+      const data = JSON.parse(match[1]);
+      if (!confirm('⚠️ 匯入後會覆蓋你目前在這個瀏覽器的內容，確定要繼續嗎？')) return;
+      FIELDS.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && data[id] !== undefined) el.value = data[id];
+      });
+      CHECKBOXES.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && data[id] !== undefined) el.checked = data[id];
+      });
+      saveData();
+      updateProgress();
+      alert('✅ 匯入成功！可以繼續編輯了。');
+    } catch (err) {
+      alert('❌ 檔案格式錯誤：' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = ''; // reset for next import
+}
+
+function resetAll() {
+  if (!confirm('確定要清除所有填寫的內容嗎？此動作無法復原。')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  FIELDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  CHECKBOXES.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.checked = false;
+  });
+  document.getElementById('m_date').valueAsDate = new Date();
+  document.getElementById('m_version').value = 'v0.1';
+  document.getElementById('m_status').value = '草稿';
+  saveData();
+  updateProgress();
+}
+
+window.addEventListener('load', () => {
+  loadData();
+  FIELDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', onChange);
+  });
+  CHECKBOXES.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', onChange);
+  });
+});
+</script>
+</body>
+</html>
