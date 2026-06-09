@@ -1,0 +1,22 @@
+# robots.txt — 告訴爬蟲哪些可以抓
+# 文件說明：https://developers.google.com/search/docs/crawling-indexing/robots/intro
+
+# 一般搜尋引擎爬蟲（Google、Bing 等）
+User-agent: *
+Allow: /
+
+# AI 爬蟲（GEO 用：歡迎 AI 來讀，這樣 AI 回答時才會引用我們）
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+# 網站地圖位置（幫爬蟲找到所有頁面）
+Sitemap: https://kaohsiung-events.netlify.app/sitemap.xml
