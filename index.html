@@ -39,6 +39,11 @@
   }
   </script>
 
+  <!-- ══ 字體：Noto Sans TC ══ -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet" />
+
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="data.js"></script>
@@ -125,14 +130,49 @@
     .activity-list::-webkit-scrollbar-thumb { background: #374151; border-radius: 2px; }
 
     .activity-card {
-      background: #1a202c; border-radius: 8px; padding: 9px 11px;
-      margin-bottom: 5px; cursor: pointer;
-      border: 1px solid #2d3748; transition: all 0.12s;
+      background: #1a202c; border-radius: 10px; padding: 8px;
+      margin-bottom: 6px; cursor: pointer;
+      border: 1px solid #2d3748; transition: all 0.14s;
+      display: flex; gap: 9px; align-items: stretch;
     }
-    .activity-card:hover { background: #1e3050; border-color: #3b82f6; }
+    .activity-card:hover { background: #1e3050; border-color: #3b82f6; transform: translateY(-1px); }
     .activity-card.active { background: #1e3a5f; border-color: #60a5fa; }
+    .card-body { flex: 1; min-width: 0; }
 
-    .card-name { font-size: 0.8rem; font-weight: 600; color: #e2e8f0; margin-bottom: 4px; }
+    /* ── 日曆方塊 ── */
+    .date-block {
+      flex-shrink: 0; width: 46px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: #0f1923; border: 1px solid #2d3748;
+      border-radius: 8px; padding: 4px 2px;
+    }
+    .date-block.db-range { border-color: #3b82f655; }
+    .db-month { font-size: 0.6rem; color: #9ca3af; line-height: 1.1; }
+    .db-day   { font-size: 1.3rem; font-weight: 800; color: #e2e8f0; line-height: 1.15; }
+    .db-wd    { font-size: 0.55rem; color: #6b7280; line-height: 1.1; white-space: nowrap; }
+    .date-block.db-long .db-day { font-size: 1.05rem; }
+    .date-block.db-long { border-color: #4b556355; }
+
+    /* ── 進行中徽章 ── */
+    .badge-live {
+      display: inline-block; font-size: 0.6rem; font-weight: 700;
+      color: #fff; background: #ef4444; padding: 1px 6px;
+      border-radius: 6px; vertical-align: middle; margin-right: 3px;
+      animation: livepulse 1.8s ease-in-out infinite;
+    }
+    @keyframes livepulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+    .meta-date { color: #93a3b8; }
+
+    /* ── 篩選按鈕數量 ── */
+    .cnt {
+      display: inline-block; min-width: 15px; text-align: center;
+      font-size: 0.6rem; background: #0f1923; color: #9ca3af;
+      border-radius: 8px; padding: 0 4px; margin-left: 3px;
+    }
+    .filter-btn.active .cnt { background: rgba(0,0,0,.28); color: #fff; }
+
+    .card-name { font-size: 0.82rem; font-weight: 600; color: #e2e8f0; margin-bottom: 4px; }
     .card-meta { font-size: 0.7rem; color: #6b7280; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: 2px; }
 
     .cat-pill {
@@ -148,13 +188,21 @@
     /* ── Map ── */
     #map { flex: 1; }
 
-    /* ── Popup ── */
-    .lf-popup h3 { margin: 0 0 3px; font-size: 0.88rem; color: #1a202c; }
-    .lf-popup .sub { font-size: 0.72rem; color: #6b7280; margin-bottom: 6px; }
-    .lf-popup .evt { border-top: 1px solid #e2e8f0; padding: 5px 0 2px; }
-    .lf-popup .evt-name { font-size: 0.78rem; font-weight: 600; color: #2d3748; }
-    .lf-popup .evt-date { font-size: 0.7rem; color: #2563eb; }
-    .lf-popup .evt-link { font-size: 0.68rem; color: #2563eb; text-decoration: none; }
+    /* ── Popup（深色化）── */
+    .leaflet-popup-content-wrapper {
+      background: #1a202c; color: #e0e0e0;
+      border: 1px solid #2d3748; border-radius: 10px;
+      box-shadow: 0 6px 24px rgba(0,0,0,.55);
+    }
+    .leaflet-popup-tip { background: #1a202c; border: 1px solid #2d3748; box-shadow: none; }
+    .leaflet-popup-close-button { color: #9ca3af !important; }
+    .leaflet-popup-close-button:hover { color: #fff !important; }
+    .lf-popup h3 { margin: 0 0 3px; font-size: 0.88rem; color: #f1f5f9; }
+    .lf-popup .sub { font-size: 0.72rem; color: #94a3b8; margin-bottom: 6px; }
+    .lf-popup .evt { border-top: 1px solid #2d3748; padding: 5px 0 2px; }
+    .lf-popup .evt-name { font-size: 0.78rem; font-weight: 600; color: #e2e8f0; }
+    .lf-popup .evt-date { font-size: 0.7rem; color: #60a5fa; }
+    .lf-popup .evt-link { font-size: 0.68rem; color: #60a5fa; text-decoration: none; }
     .lf-popup .evt-link:hover { text-decoration: underline; }
     .card-link { display: inline-block; font-size: 0.68rem; color: #60a5fa; text-decoration: none; white-space: nowrap; padding: 1px 5px; border: 1px solid #2563eb44; border-radius: 4px; }
     .card-link:hover { background: #1e3a8a; }
@@ -307,6 +355,66 @@ function dateRange(a) {
   return `${a.start} ～ ${a.end}`;
 }
 
+// ── 日期解析（"06/13" → Date；非日期回傳 null）──
+const WEEKDAYS = ['日','一','二','三','四','五','六'];
+function parseDate(mmdd) {
+  const m = /^(\d{2})\/(\d{2})$/.exec(mmdd);
+  return m ? new Date(2026, +m[1] - 1, +m[2]) : null;
+}
+
+// ── 日曆方塊 HTML ──
+function dateBlockHTML(a) {
+  if (a.start === '整月') {
+    return `<div class="date-block db-long"><span class="db-day">🔁</span><span class="db-wd">長期</span></div>`;
+  }
+  const d = parseDate(a.start);
+  if (!d) return `<div class="date-block"><span class="db-day">—</span></div>`;
+  const range = a.start !== a.end;
+  return `<div class="date-block${range ? ' db-range' : ''}">
+    <span class="db-month">${d.getMonth() + 1}月</span>
+    <span class="db-day">${d.getDate()}</span>
+    <span class="db-wd">週${WEEKDAYS[d.getDay()]}${range ? ' 起' : ''}</span>
+  </div>`;
+}
+
+// ── 補充日期文字（單日不重複顯示，多日/整月才顯示範圍）──
+function metaDateHTML(a) {
+  if (a.start === '整月') return `<span class="meta-date">📅 即日起 ～ ${a.end}</span>`;
+  if (a.start !== a.end)  return `<span class="meta-date">📅 ${a.start} ～ ${a.end}</span>`;
+  return '';
+}
+
+// ── 判斷活動「今天是否進行中」──
+function isLive(a) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  let s = a.start === '整月' ? new Date(2026, 5, 1) : parseDate(a.start);
+  let e = parseDate(a.end);
+  if (!s) return false;
+  if (!e) e = s;
+  return today >= s && today <= e;
+}
+
+// ── 計算各類別在「目前週次+搜尋」下的數量 ──
+function catCount(cat) {
+  return ACTIVITIES.filter(a => {
+    if (cat !== 'all' && a.cat !== cat) return false;
+    if (!inWeek(a, activeWeek)) return false;
+    if (searchQ) {
+      const q = searchQ.toLowerCase();
+      if (!a.name.toLowerCase().includes(q) && !a.venue.toLowerCase().includes(q)) return false;
+    }
+    return true;
+  }).length;
+}
+
+function updateFilterCounts() {
+  document.querySelectorAll('#catRow [data-cat]').forEach(btn => {
+    if (!btn.dataset.base) btn.dataset.base = btn.textContent.trim();
+    const n = catCount(btn.dataset.cat);
+    btn.innerHTML = `${btn.dataset.base} <span class="cnt">${n}</span>`;
+  });
+}
+
 // ══════════════════════════════════════════════
 //  渲染：地圖標記
 // ══════════════════════════════════════════════
@@ -336,7 +444,7 @@ function buildMarkers() {
       <div class="evt">
         <div class="evt-name">${CAT[a.cat].icon} ${a.name}</div>
         <div class="evt-date">📅 ${dateRange(a)}${a.url ? ` <a href="${a.url}" target="_blank" rel="noopener" class="evt-link">詳情 🔗</a>` : ''}</div>
-      </div>`).join('') + `<div style="border-top:1px solid #e2e8f0;padding-top:6px;margin-top:4px;text-align:right"><a href="${navUrl}" target="_blank" rel="noopener" class="evt-nav">🧭 從這裡導航</a></div>`;
+      </div>`).join('') + `<div style="border-top:1px solid #2d3748;padding-top:6px;margin-top:4px;text-align:right"><a href="${navUrl}" target="_blank" rel="noopener" class="evt-nav">🧭 從這裡導航</a></div>`;
 
     m.bindPopup(`
       <div class="lf-popup" style="font-family:sans-serif;min-width:200px">
@@ -360,15 +468,18 @@ function buildList() {
   document.getElementById('activityList').innerHTML = list.map(a => `
     <div class="activity-card${activeId === a.id ? ' active' : ''}"
          onclick="onCard(${a.id})" data-id="${a.id}">
-      <div class="card-name">${a.name}</div>
-      <div class="card-meta">
-        <span class="cat-pill cat-${a.cat}">${CAT[a.cat].icon} ${CAT[a.cat].label}</span>
-        <span>📅 ${dateRange(a)}</span>
-      </div>
-      <div class="card-meta">
-        <span>📍 ${a.venue}・${a.district}</span>
-        ${a.url ? `<a href="${a.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="card-link">詳情 🔗</a>` : ''}
-        <a href="https://www.google.com/maps/dir/?api=1&destination=${a.lat},${a.lng}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="card-nav">🧭 導航</a>
+      ${dateBlockHTML(a)}
+      <div class="card-body">
+        <div class="card-name">${isLive(a) ? '<span class="badge-live">進行中</span>' : ''}${a.name}</div>
+        <div class="card-meta">
+          <span class="cat-pill cat-${a.cat}">${CAT[a.cat].icon} ${CAT[a.cat].label}</span>
+          ${metaDateHTML(a)}
+        </div>
+        <div class="card-meta">
+          <span>📍 ${a.venue}・${a.district}</span>
+          ${a.url ? `<a href="${a.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="card-link">詳情 🔗</a>` : ''}
+          <a href="https://www.google.com/maps/dir/?api=1&destination=${a.lat},${a.lng}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="card-nav">🧭 導航</a>
+        </div>
       </div>
     </div>`).join('');
 }
@@ -424,6 +535,7 @@ document.getElementById('searchInput').addEventListener('input', e => {
 function render() {
   buildMarkers();
   buildList();
+  updateFilterCounts();
 }
 
 // ══════════════════════════════════════════════
