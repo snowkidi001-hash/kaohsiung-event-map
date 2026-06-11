@@ -46,6 +46,10 @@
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- 標記聚合外掛 -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
   <script src="data.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -152,6 +156,28 @@
       white-space: nowrap;
     }
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── 手機版視圖切換 FAB（桌機隱藏）── */
+    .view-fab { display: none; }
+
+    /* ── 離我最近按鈕 ── */
+    .near-btn {
+      background: var(--bg-3); border: 1px solid var(--border); color: var(--text-2);
+      border-radius: 12px; padding: 2px 9px; font-size: 0.66rem;
+      cursor: pointer; transition: all 0.15s; white-space: nowrap;
+    }
+    .near-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .cb-right { display: flex; gap: 8px; align-items: center; }
+
+    /* ── 聚合圓圈（海港配色）── */
+    .cluster-icon {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, #0ea5e9, #0369a1);
+      border: 2.5px solid #fff;
+      color: #fff; font-weight: 800; font-size: 0.85rem;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,.45);
+    }
 
     /* ── 主題切換按鈕 ── */
     .icon-btn {
@@ -372,6 +398,28 @@
       .filter-btn { white-space: nowrap; flex-shrink: 0; }
 
       #map { flex: 1; min-height: 0; }
+
+      /* ── 視圖切換 FAB ── */
+      .view-fab {
+        display: flex; align-items: center; gap: 5px;
+        position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%);
+        z-index: 1100;
+        background: var(--accent); color: #fff; border: none;
+        padding: 10px 22px; border-radius: 24px;
+        font-size: 0.85rem; font-weight: 700;
+        box-shadow: 0 4px 16px rgba(0,0,0,.45);
+        cursor: pointer;
+      }
+      .view-fab:active { transform: translateX(-50%) scale(0.94); }
+
+      /* 地圖模式：地圖滿版，隱藏側欄 */
+      body.view-map .sidebar { display: none; }
+      /* 列表模式：列表滿版，隱藏地圖 */
+      body.view-list #map { display: none; }
+      body.view-list .sidebar { height: 100%; border-top: none; }
+
+      /* Toast 移高，避免被 FAB 擋住 */
+      #toast { bottom: 78px; }
     }
   </style>
 </head>
@@ -418,13 +466,18 @@
 
     <div class="count-bar">
       <span id="countBar">共 0 個活動</span>
-      <label class="chk"><input type="checkbox" id="showExpiredChk" /> 顯示已結束</label>
+      <span class="cb-right">
+        <button class="near-btn" id="nearBtn">📍 離我最近</button>
+        <label class="chk"><input type="checkbox" id="showExpiredChk" /> 顯示已結束</label>
+      </span>
     </div>
     <div class="activity-list" id="activityList"></div>
   </div>
 
   <div id="map"></div>
 </div>
+
+<button class="view-fab" id="viewFab">📋 列表</button>
 
 <script>
 // ══════════════════════════════════════════════
@@ -436,6 +489,17 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
 }).addTo(map);
 
+// 標記聚合群組：縮小時鄰近標記合併成數字圓圈
+const clusterGroup = L.markerClusterGroup({
+  maxClusterRadius: 42,
+  disableClusteringAtZoom: 15,
+  showCoverageOnHover: false,
+  iconCreateFunction: c => L.divIcon({
+    html: `<div class="cluster-icon">${c.getChildCount()}</div>`,
+    className: '', iconSize: [36, 36], iconAnchor: [18, 18],
+  }),
+}).addTo(map);
+
 // ══════════════════════════════════════════════
 //  狀態
 // ══════════════════════════════════════════════
@@ -445,6 +509,9 @@ let searchQ    = '';
 let showExpired = false;   // 預設隱藏已結束活動
 let markerMap  = {};   // id → L.marker
 let activeId   = null;
+let sortByDistance = false;  // 離我最近排序
+let userPos    = null;       // 使用者定位 {lat, lng}
+let userMarker = null;       // 地圖上的「你的位置」標記
 
 // ── 月份狀態（預設開最新月份）──
 let monthIdx     = MONTHS.length - 1;
@@ -499,6 +566,15 @@ function makeIcon(cat) {
 function dateRange(a) {
   if (a.start === a.end) return a.start;
   return `${a.start} ～ ${a.end}`;
+}
+
+// ── 兩點間距離（公里，Haversine 公式）──
+function distKm(lat1, lng1, lat2, lng2) {
+  const R = 6371, toRad = d => d * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
+  const s = Math.sin(dLat / 2) ** 2 +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(s));
 }
 
 // ── 日期解析（"06/13" → Date；非日期回傳 null）──
@@ -574,7 +650,7 @@ function updateFilterCounts() {
 //  渲染：地圖標記
 // ══════════════════════════════════════════════
 function buildMarkers() {
-  Object.values(markerMap).forEach(m => map.removeLayer(m));
+  clusterGroup.clearLayers();
   markerMap = {};
 
   const list = filtered();
@@ -592,7 +668,7 @@ function buildMarkers() {
     acts.forEach(a => cc[a.cat] = (cc[a.cat]||0) + 1);
     const dom = Object.entries(cc).sort((x,y)=>y[1]-x[1])[0][0];
 
-    const m = L.marker([lat, lng], { icon: makeIcon(dom) }).addTo(map);
+    const m = L.marker([lat, lng], { icon: makeIcon(dom) });
 
     const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
     const inner = acts.map(a => `
@@ -618,6 +694,7 @@ function buildMarkers() {
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
 
+    clusterGroup.addLayer(m);
     acts.forEach(a => { markerMap[a.id] = m; });
   });
 }
@@ -626,7 +703,13 @@ function buildMarkers() {
 //  渲染：側欄列表
 // ══════════════════════════════════════════════
 function buildList() {
-  const list = filtered();
+  let list = filtered();
+  // 離我最近排序
+  if (sortByDistance && userPos) {
+    list = list.slice().sort((a, b) =>
+      distKm(userPos.lat, userPos.lng, a.lat, a.lng) -
+      distKm(userPos.lat, userPos.lng, b.lat, b.lng));
+  }
   document.getElementById('countBar').textContent = `共 ${list.length} 個活動`;
   document.getElementById('badgeCount').textContent = `${list.length} 個活動`;
 
@@ -651,6 +734,7 @@ function buildList() {
         <div class="card-meta">
           <span class="cat-pill cat-${a.cat}">${CAT[a.cat].icon} ${CAT[a.cat].label}</span>
           ${metaDateHTML(a)}
+          ${sortByDistance && userPos ? `<span class="meta-date">📏 ${distKm(userPos.lat, userPos.lng, a.lat, a.lng).toFixed(1)} km</span>` : ''}
         </div>
         <div class="card-meta">
           <span>📍 ${a.venue}・${a.district}</span>
@@ -686,10 +770,12 @@ function singlePopupHTML(a) {
     </div>`;
 }
 
-// 從單一活動彈窗切換到場館全部活動彈窗
+// 從單一活動彈窗切換到場館全部活動彈窗（聚合中的標記先展開再開彈窗）
 function showVenuePopup(id) {
   map.closePopup();
-  if (markerMap[id]) markerMap[id].openPopup();
+  const m = markerMap[id];
+  if (!m) return;
+  clusterGroup.zoomToShowLayer(m, () => m.openPopup());
 }
 
 function onCard(id) {
@@ -703,14 +789,19 @@ function onCard(id) {
   const el = document.querySelector(`.activity-card[data-id="${id}"]`);
   if (el) el.scrollIntoView({ behavior:'smooth', block:'nearest' });
 
+  // 手機列表模式 → 先切回地圖模式再飛過去
+  const needSwitch = isMobile() && viewMode === 'list';
+  if (needSwitch) { viewMode = 'map'; applyView(); }
+  const delay = needSwitch ? 150 : 0;
+
   // 飛到地圖位置，只顯示被點選的活動
-  map.flyTo([a.lat, a.lng], 15, { duration: 0.7 });
+  setTimeout(() => map.flyTo([a.lat, a.lng], 15, { duration: 0.7 }), delay);
   setTimeout(() => {
     L.popup({ maxWidth: 300, offset: [0, -18] })
       .setLatLng([a.lat, a.lng])
       .setContent(singlePopupHTML(a))
       .openOn(map);
-  }, 750);
+  }, 750 + delay);
 }
 
 // 類別篩選
@@ -841,6 +932,53 @@ document.getElementById('showExpiredChk').addEventListener('change', e => {
   showExpired = e.target.checked;
   render();
 });
+
+// ── 離我最近：取得定位 → 排序 ──
+const nearBtn = document.getElementById('nearBtn');
+function setNearActive(on) {
+  sortByDistance = on;
+  nearBtn.classList.toggle('active', on);
+  render();
+}
+nearBtn.addEventListener('click', () => {
+  if (sortByDistance) { setNearActive(false); return; }   // 再點一次關閉
+  if (userPos) { setNearActive(true); return; }            // 已有定位直接開
+  if (!navigator.geolocation) { showToast('此瀏覽器不支援定位'); return; }
+  nearBtn.textContent = '📍 定位中…';
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      nearBtn.textContent = '📍 離我最近';
+      if (userMarker) map.removeLayer(userMarker);
+      userMarker = L.circleMarker([userPos.lat, userPos.lng], {
+        radius: 7, color: '#fff', weight: 2.5, fillColor: '#0ea5e9', fillOpacity: 1,
+      }).addTo(map).bindPopup('📍 你的位置');
+      setNearActive(true);
+    },
+    () => {
+      nearBtn.textContent = '📍 離我最近';
+      showToast('無法取得位置，請允許定位權限');
+    },
+    { enableHighAccuracy: false, timeout: 8000 }
+  );
+});
+
+// ── 手機版「地圖 / 列表」雙視圖切換 ──
+const viewFab = document.getElementById('viewFab');
+function isMobile() { return window.matchMedia('(max-width: 700px)').matches; }
+let viewMode = 'map';   // 手機預設地圖滿版
+function applyView() {
+  document.body.classList.toggle('view-map', viewMode === 'map');
+  document.body.classList.toggle('view-list', viewMode === 'list');
+  viewFab.textContent = viewMode === 'map' ? '📋 列表' : '🗺️ 地圖';
+  // 地圖容器尺寸改變後要通知 Leaflet 重算
+  if (viewMode === 'map') setTimeout(() => map.invalidateSize(), 80);
+}
+viewFab.addEventListener('click', () => {
+  viewMode = viewMode === 'map' ? 'list' : 'map';
+  applyView();
+});
+applyView();
 
 // ── Toast 提示 ──
 let toastTimer = null;
