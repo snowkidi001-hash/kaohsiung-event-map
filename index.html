@@ -49,18 +49,83 @@
   <script src="data.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Noto Sans TC', -apple-system, sans-serif; background: #0f1117; color: #e0e0e0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* ── 主題變數（深色為預設）── */
+    :root {
+      --bg: #0f1117;
+      --bg-2: #111827;
+      --bg-3: #1a202c;
+      --bg-4: #0f1923;
+      --border: #2d3748;
+      --border-2: #1f2937;
+      --text: #e0e0e0;
+      --text-strong: #f1f5f9;
+      --text-2: #9ca3af;
+      --text-3: #6b7280;
+      --header-g1: #1a1a2e;
+      --header-g2: #16213e;
+      --header-border: #2a2a4a;
+      --card-hover: #1e3050;
+      --card-active: #1e3a5f;
+      --scrollbar: #374151;
+      --date-day: #e2e8f0;
+      --meta-date: #93a3b8;
+      --link: #60a5fa;
+      --link-hover-bg: #1e3a8a;
+      --nav: #fbbf24;
+      --nav-border: #fbbf2444;
+      --nav-hover-bg: #78350f;
+    }
+    body.light {
+      --bg: #eef1f5;
+      --bg-2: #ffffff;
+      --bg-3: #f8fafc;
+      --bg-4: #f1f5f9;
+      --border: #d8dee6;
+      --border-2: #e5e9ef;
+      --text: #1e293b;
+      --text-strong: #0f172a;
+      --text-2: #64748b;
+      --text-3: #94a3b8;
+      --header-g1: #ffffff;
+      --header-g2: #f1f5f9;
+      --header-border: #e2e8f0;
+      --card-hover: #e8f0fe;
+      --card-active: #dbeafe;
+      --scrollbar: #cbd5e1;
+      --date-day: #1e293b;
+      --meta-date: #475569;
+      --link: #2563eb;
+      --link-hover-bg: #dbeafe;
+      --nav: #b45309;
+      --nav-border: #b4530944;
+      --nav-hover-bg: #fef3c7;
+    }
+
+    body { font-family: 'Noto Sans TC', -apple-system, sans-serif; background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; transition: background-color .25s, color .25s; }
 
     /* ── Header ── */
     header {
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      background: linear-gradient(135deg, var(--header-g1) 0%, var(--header-g2) 100%);
       padding: 10px 20px;
       display: flex; align-items: center; gap: 16px;
-      border-bottom: 1px solid #2a2a4a;
+      border-bottom: 1px solid var(--header-border);
       flex-shrink: 0;
+      transition: background .25s;
     }
-    header h1 { font-size: 1.2rem; color: #fff; white-space: nowrap; }
-    header p  { font-size: 0.75rem; color: #888; }
+    header h1 { font-size: 1.2rem; color: var(--text-strong); white-space: nowrap; }
+    header p  { font-size: 0.75rem; color: var(--text-3); }
+
+    /* ── 主題切換按鈕 ── */
+    .icon-btn {
+      margin-left: auto;
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text-2); border-radius: 8px;
+      padding: 4px 10px; cursor: pointer; font-size: 0.9rem;
+      transition: all 0.15s;
+    }
+    .icon-btn:hover { color: var(--text); border-color: var(--text-3); transform: scale(1.06); }
+    .icon-btn:active { transform: scale(0.94); }
     .badge {
       background: #e84c3d; color: white;
       padding: 3px 10px; border-radius: 12px;
@@ -73,26 +138,29 @@
     /* ── Sidebar ── */
     .sidebar {
       width: 340px; min-width: 280px;
-      background: #111827;
+      background: var(--bg-2);
       display: flex; flex-direction: column;
-      border-right: 1px solid #1f2937;
+      border-right: 1px solid var(--border-2);
       overflow: hidden;
+      transition: background-color .25s;
     }
 
     /* ── Filters ── */
     .filters {
       padding: 10px 12px;
-      background: #0f1923;
-      border-bottom: 1px solid #1f2937;
+      background: var(--bg-4);
+      border-bottom: 1px solid var(--border-2);
       flex-shrink: 0;
+      transition: background-color .25s;
     }
-    .filter-label { font-size: 0.68rem; color: #6b7280; margin-bottom: 5px; margin-top: 6px; }
+    .filter-label { font-size: 0.68rem; color: var(--text-3); margin-bottom: 5px; margin-top: 6px; }
     .filter-row { display: flex; gap: 5px; flex-wrap: wrap; }
     .filter-btn {
       padding: 3px 9px; border-radius: 20px;
-      border: 1px solid #2d3748; background: #1a202c; color: #9ca3af;
+      border: 1px solid var(--border); background: var(--bg-3); color: var(--text-2);
       cursor: pointer; font-size: 0.7rem; transition: all 0.15s;
     }
+    .filter-btn:active { transform: scale(0.95); }
     .filter-btn:hover { filter: brightness(1.2); }
     .filter-btn.active { color: #fff; }
     .f-all.active      { background: #374151; border-color: #374151; }
@@ -106,18 +174,25 @@
 
     .search-box {
       width: 100%; padding: 7px 11px;
-      background: #1a202c; border: 1px solid #2d3748;
-      border-radius: 8px; color: #e0e0e0; font-size: 0.8rem;
+      background: var(--bg-3); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-size: 0.8rem;
       margin-bottom: 6px;
     }
     .search-box:focus { outline: none; border-color: #3b82f6; }
 
-    /* ── Count bar ── */
+    /* ── Count bar（含已結束開關）── */
     .count-bar {
-      font-size: 0.7rem; color: #6b7280;
-      padding: 5px 12px; border-bottom: 1px solid #1f2937;
+      font-size: 0.7rem; color: var(--text-3);
+      padding: 5px 12px; border-bottom: 1px solid var(--border-2);
       flex-shrink: 0;
+      display: flex; justify-content: space-between; align-items: center;
     }
+    .chk {
+      display: flex; gap: 4px; align-items: center;
+      cursor: pointer; color: var(--text-3); font-size: 0.68rem;
+      user-select: none;
+    }
+    .chk input { accent-color: #3b82f6; width: 13px; height: 13px; cursor: pointer; }
 
     /* ── Activity list ── */
     .activity-list {
@@ -127,16 +202,19 @@
       touch-action: pan-y;
     }
     .activity-list::-webkit-scrollbar { width: 4px; }
-    .activity-list::-webkit-scrollbar-thumb { background: #374151; border-radius: 2px; }
+    .activity-list::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 2px; }
 
+    @keyframes cardIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
     .activity-card {
-      background: #1a202c; border-radius: 10px; padding: 8px;
+      background: var(--bg-3); border-radius: 10px; padding: 8px;
       margin-bottom: 6px; cursor: pointer;
-      border: 1px solid #2d3748; transition: all 0.14s;
+      border: 1px solid var(--border); transition: all 0.14s;
       display: flex; gap: 9px; align-items: stretch;
+      animation: cardIn 0.2s ease both;
     }
-    .activity-card:hover { background: #1e3050; border-color: #3b82f6; transform: translateY(-1px); }
-    .activity-card.active { background: #1e3a5f; border-color: #60a5fa; }
+    .activity-card:hover { background: var(--card-hover); border-color: #3b82f6; transform: translateY(-1px); }
+    .activity-card:active { transform: scale(0.985); }
+    .activity-card.active { background: var(--card-active); border-color: #60a5fa; }
     .card-body { flex: 1; min-width: 0; }
 
     /* ── 日曆方塊 ── */
@@ -144,13 +222,13 @@
       flex-shrink: 0; width: 46px;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      background: #0f1923; border: 1px solid #2d3748;
+      background: var(--bg-4); border: 1px solid var(--border);
       border-radius: 8px; padding: 4px 2px;
     }
     .date-block.db-range { border-color: #3b82f655; }
-    .db-month { font-size: 0.6rem; color: #9ca3af; line-height: 1.1; }
-    .db-day   { font-size: 1.3rem; font-weight: 800; color: #e2e8f0; line-height: 1.15; }
-    .db-wd    { font-size: 0.55rem; color: #6b7280; line-height: 1.1; white-space: nowrap; }
+    .db-month { font-size: 0.6rem; color: var(--text-2); line-height: 1.1; }
+    .db-day   { font-size: 1.3rem; font-weight: 800; color: var(--date-day); line-height: 1.15; }
+    .db-wd    { font-size: 0.55rem; color: var(--text-3); line-height: 1.1; white-space: nowrap; }
     .date-block.db-long .db-day { font-size: 1.05rem; }
     .date-block.db-long { border-color: #4b556355; }
 
@@ -162,18 +240,31 @@
       animation: livepulse 1.8s ease-in-out infinite;
     }
     @keyframes livepulse { 0%,100%{opacity:1} 50%{opacity:.5} }
-    .meta-date { color: #93a3b8; }
+    .meta-date { color: var(--meta-date); }
 
     /* ── 篩選按鈕數量 ── */
     .cnt {
       display: inline-block; min-width: 15px; text-align: center;
-      font-size: 0.6rem; background: #0f1923; color: #9ca3af;
+      font-size: 0.6rem; background: var(--bg-4); color: var(--text-2);
       border-radius: 8px; padding: 0 4px; margin-left: 3px;
     }
     .filter-btn.active .cnt { background: rgba(0,0,0,.28); color: #fff; }
 
-    .card-name { font-size: 0.82rem; font-weight: 600; color: #e2e8f0; margin-bottom: 4px; }
-    .card-meta { font-size: 0.7rem; color: #6b7280; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: 2px; }
+    .card-name { font-size: 0.82rem; font-weight: 600; color: var(--date-day); margin-bottom: 4px; }
+    .card-meta { font-size: 0.7rem; color: var(--text-3); display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: 2px; }
+
+    /* ── 空狀態 ── */
+    .empty-state { text-align: center; padding: 40px 16px; color: var(--text-3); }
+    .empty-state .es-icon  { font-size: 2.2rem; margin-bottom: 10px; }
+    .empty-state .es-title { font-size: 0.88rem; color: var(--text-2); font-weight: 600; margin-bottom: 5px; }
+    .empty-state .es-hint  { font-size: 0.72rem; margin-bottom: 14px; line-height: 1.6; }
+    .es-btn {
+      background: #3b82f6; color: #fff; border: none;
+      padding: 7px 16px; border-radius: 8px; cursor: pointer;
+      font-size: 0.76rem; transition: all 0.15s;
+    }
+    .es-btn:hover { background: #2563eb; }
+    .es-btn:active { transform: scale(0.95); }
 
     .cat-pill {
       padding: 1px 7px; border-radius: 10px; font-size: 0.64rem; font-weight: 700;
@@ -188,27 +279,28 @@
     /* ── Map ── */
     #map { flex: 1; }
 
-    /* ── Popup（深色化）── */
+    /* ── Popup（跟隨主題）── */
     .leaflet-popup-content-wrapper {
-      background: #1a202c; color: #e0e0e0;
-      border: 1px solid #2d3748; border-radius: 10px;
-      box-shadow: 0 6px 24px rgba(0,0,0,.55);
+      background: var(--bg-3); color: var(--text);
+      border: 1px solid var(--border); border-radius: 10px;
+      box-shadow: 0 6px 24px rgba(0,0,0,.45);
     }
-    .leaflet-popup-tip { background: #1a202c; border: 1px solid #2d3748; box-shadow: none; }
-    .leaflet-popup-close-button { color: #9ca3af !important; }
-    .leaflet-popup-close-button:hover { color: #fff !important; }
-    .lf-popup h3 { margin: 0 0 3px; font-size: 0.88rem; color: #f1f5f9; }
-    .lf-popup .sub { font-size: 0.72rem; color: #94a3b8; margin-bottom: 6px; }
-    .lf-popup .evt { border-top: 1px solid #2d3748; padding: 5px 0 2px; }
-    .lf-popup .evt-name { font-size: 0.78rem; font-weight: 600; color: #e2e8f0; }
-    .lf-popup .evt-date { font-size: 0.7rem; color: #60a5fa; }
-    .lf-popup .evt-link { font-size: 0.68rem; color: #60a5fa; text-decoration: none; }
+    .leaflet-popup-tip { background: var(--bg-3); border: 1px solid var(--border); box-shadow: none; }
+    .leaflet-popup-close-button { color: var(--text-2) !important; }
+    .leaflet-popup-close-button:hover { color: var(--text-strong) !important; }
+    .lf-popup h3 { margin: 0 0 3px; font-size: 0.88rem; color: var(--text-strong); }
+    .lf-popup .sub { font-size: 0.72rem; color: var(--text-2); margin-bottom: 6px; }
+    .lf-popup .evt { border-top: 1px solid var(--border); padding: 5px 0 2px; }
+    .lf-popup .evt-name { font-size: 0.78rem; font-weight: 600; color: var(--text); }
+    .lf-popup .evt-date { font-size: 0.7rem; color: var(--link); }
+    .lf-popup .evt-link { font-size: 0.68rem; color: var(--link); text-decoration: none; }
     .lf-popup .evt-link:hover { text-decoration: underline; }
-    .card-link { display: inline-block; font-size: 0.68rem; color: #60a5fa; text-decoration: none; white-space: nowrap; padding: 1px 5px; border: 1px solid #2563eb44; border-radius: 4px; }
-    .card-link:hover { background: #1e3a8a; }
-    .card-nav { display: inline-block; font-size: 0.68rem; color: #fbbf24; text-decoration: none; white-space: nowrap; padding: 1px 5px; border: 1px solid #fbbf2444; border-radius: 4px; margin-left: auto; }
-    .card-nav:hover { background: #78350f; }
-    .lf-popup .evt-nav { font-size: 0.68rem; color: #ca8a04; text-decoration: none; margin-left: 6px; }
+    .lf-popup .evt-foot { border-top: 1px solid var(--border); padding-top: 6px; margin-top: 4px; text-align: right; }
+    .card-link { display: inline-block; font-size: 0.68rem; color: var(--link); text-decoration: none; white-space: nowrap; padding: 1px 5px; border: 1px solid #2563eb44; border-radius: 4px; }
+    .card-link:hover { background: var(--link-hover-bg); }
+    .card-nav { display: inline-block; font-size: 0.68rem; color: var(--nav); text-decoration: none; white-space: nowrap; padding: 1px 5px; border: 1px solid var(--nav-border); border-radius: 4px; margin-left: auto; }
+    .card-nav:hover { background: var(--nav-hover-bg); }
+    .lf-popup .evt-nav { font-size: 0.68rem; color: var(--nav); text-decoration: none; margin-left: 6px; }
     .lf-popup .evt-nav:hover { text-decoration: underline; }
 
     /* ── Mobile ── */
@@ -220,7 +312,7 @@
       .container { flex-direction: column-reverse; }
       .sidebar {
         width: 100%; height: 60vh;
-        border-right: none; border-top: 1px solid #1f2937;
+        border-right: none; border-top: 1px solid var(--border-2);
         overflow: hidden;
       }
 
@@ -254,6 +346,7 @@
     <p>2026年 6月1日 ～ 6月30日</p>
   </div>
   <span class="badge" id="badgeCount">載入中…</span>
+  <button class="icon-btn" id="themeBtn" title="切換亮／暗模式">☀️</button>
 </header>
 
 <div class="container">
@@ -282,7 +375,10 @@
       </div>
     </div>
 
-    <div class="count-bar" id="countBar">共 0 個活動</div>
+    <div class="count-bar">
+      <span id="countBar">共 0 個活動</span>
+      <label class="chk"><input type="checkbox" id="showExpiredChk" /> 顯示已結束</label>
+    </div>
     <div class="activity-list" id="activityList"></div>
   </div>
 
@@ -305,6 +401,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 let activeCat  = 'all';
 let activeWeek = 'all';
 let searchQ    = '';
+let showExpired = false;   // 預設隱藏已結束活動
 let markerMap  = {};   // id → L.marker
 let activeId   = null;
 
@@ -329,6 +426,7 @@ function inWeek(a, week) {
 
 function filtered() {
   return ACTIVITIES.filter(a => {
+    if (!showExpired && isExpired(a)) return false;
     if (activeCat !== 'all' && a.cat !== activeCat) return false;
     if (!inWeek(a, activeWeek)) return false;
     if (searchQ) {
@@ -394,9 +492,18 @@ function isLive(a) {
   return today >= s && today <= e;
 }
 
+// ── 判斷活動「是否已結束」──
+function isExpired(a) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const e = parseDate(a.end);
+  if (!e) return false;
+  return e < today;
+}
+
 // ── 計算各類別在「目前週次+搜尋」下的數量 ──
 function catCount(cat) {
   return ACTIVITIES.filter(a => {
+    if (!showExpired && isExpired(a)) return false;
     if (cat !== 'all' && a.cat !== cat) return false;
     if (!inWeek(a, activeWeek)) return false;
     if (searchQ) {
@@ -442,16 +549,26 @@ function buildMarkers() {
     const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
     const inner = acts.map(a => `
       <div class="evt">
-        <div class="evt-name">${CAT[a.cat].icon} ${a.name}</div>
+        <div class="evt-name">${isLive(a) ? '<span class="badge-live">進行中</span>' : ''}${CAT[a.cat].icon} ${a.name}</div>
         <div class="evt-date">📅 ${dateRange(a)}${a.url ? ` <a href="${a.url}" target="_blank" rel="noopener" class="evt-link">詳情 🔗</a>` : ''}</div>
-      </div>`).join('') + `<div style="border-top:1px solid #2d3748;padding-top:6px;margin-top:4px;text-align:right"><a href="${navUrl}" target="_blank" rel="noopener" class="evt-nav">🧭 從這裡導航</a></div>`;
+      </div>`).join('') + `<div class="evt-foot"><a href="${navUrl}" target="_blank" rel="noopener" class="evt-nav">🧭 從這裡導航</a></div>`;
 
     m.bindPopup(`
-      <div class="lf-popup" style="font-family:sans-serif;min-width:200px">
+      <div class="lf-popup" style="min-width:200px">
         <h3>${venue}</h3>
         <div class="sub">📍 ${district}　共 ${acts.length} 個活動</div>
         ${inner}
       </div>`, { maxWidth: 300 });
+
+    // 點地圖標記 → 側欄自動捲到該場館的第一個活動
+    m.on('click', () => {
+      const first = acts[0];
+      activeId = first.id;
+      document.querySelectorAll('.activity-card').forEach(el =>
+        el.classList.toggle('active', +el.dataset.id === first.id));
+      const el = document.querySelector(`.activity-card[data-id="${first.id}"]`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
 
     acts.forEach(a => { markerMap[a.id] = m; });
   });
@@ -464,6 +581,18 @@ function buildList() {
   const list = filtered();
   document.getElementById('countBar').textContent = `共 ${list.length} 個活動`;
   document.getElementById('badgeCount').textContent = `${list.length} 個活動`;
+
+  // 空狀態：找不到符合的活動
+  if (list.length === 0) {
+    document.getElementById('activityList').innerHTML = `
+      <div class="empty-state">
+        <div class="es-icon">🔍</div>
+        <div class="es-title">找不到符合的活動</div>
+        <div class="es-hint">試試其他關鍵字，或調整類別／週次篩選${showExpired ? '' : '<br>（已結束的活動預設隱藏）'}</div>
+        <button class="es-btn" onclick="resetFilters()">清除所有篩選</button>
+      </div>`;
+    return;
+  }
 
   document.getElementById('activityList').innerHTML = list.map(a => `
     <div class="activity-card${activeId === a.id ? ' active' : ''}"
@@ -505,7 +634,7 @@ function singlePopupHTML(a) {
         <div class="evt-date">📅 ${dateRange(a)}${a.url ? ` <a href="${a.url}" target="_blank" rel="noopener" class="evt-link">詳情 🔗</a>` : ''}</div>
       </div>
       ${moreLink}
-      <div style="border-top:1px solid #2d3748;padding-top:6px;margin-top:4px;text-align:right"><a href="${navUrl}" target="_blank" rel="noopener" class="evt-nav">🧭 從這裡導航</a></div>
+      <div class="evt-foot"><a href="${navUrl}" target="_blank" rel="noopener" class="evt-nav">🧭 從這裡導航</a></div>
     </div>`;
 }
 
@@ -633,6 +762,37 @@ document.getElementById('activityList').addEventListener('touchstart', function(
 document.getElementById('activityList').addEventListener('touchmove', function(e) {
   e.stopPropagation();
 }, { passive: true });
+
+// ── 清除所有篩選（空狀態按鈕用）──
+function resetFilters() {
+  activeCat = 'all'; activeWeek = 'all'; searchQ = '';
+  document.getElementById('searchInput').value = '';
+  document.querySelectorAll('#catRow [data-cat]').forEach(b =>
+    b.classList.toggle('active', b.dataset.cat === 'all'));
+  document.querySelectorAll('#weekRow [data-week]').forEach(b =>
+    b.classList.toggle('active', b.dataset.week === 'all'));
+  render();
+}
+
+// ── 主題切換（記住偏好）──
+const themeBtn = document.getElementById('themeBtn');
+function applyTheme(t) {
+  document.body.classList.toggle('light', t === 'light');
+  themeBtn.textContent = t === 'light' ? '🌙' : '☀️';
+}
+let theme = localStorage.getItem('ksmap-theme') || 'dark';
+applyTheme(theme);
+themeBtn.addEventListener('click', () => {
+  theme = theme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('ksmap-theme', theme);
+  applyTheme(theme);
+});
+
+// ── 顯示已結束開關 ──
+document.getElementById('showExpiredChk').addEventListener('change', e => {
+  showExpired = e.target.checked;
+  render();
+});
 
 window.addEventListener('load', function () {
   activeCat  = 'all';
