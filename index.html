@@ -50,62 +50,68 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    /* ── 主題變數（深色為預設）── */
+    /* ── 主題變數：高雄海港配色（深色「港灣夜色」為預設）── */
     :root {
-      --bg: #0f1117;
-      --bg-2: #111827;
-      --bg-3: #1a202c;
-      --bg-4: #0f1923;
-      --border: #2d3748;
-      --border-2: #1f2937;
-      --text: #e0e0e0;
-      --text-strong: #f1f5f9;
-      --text-2: #9ca3af;
-      --text-3: #6b7280;
-      --header-g1: #1a1a2e;
-      --header-g2: #16213e;
-      --header-border: #2a2a4a;
-      --card-hover: #1e3050;
-      --card-active: #1e3a5f;
-      --scrollbar: #374151;
-      --date-day: #e2e8f0;
-      --meta-date: #93a3b8;
-      --link: #60a5fa;
-      --link-hover-bg: #1e3a8a;
+      --bg: #081420;
+      --bg-2: #0c1c2e;
+      --bg-3: #122740;
+      --bg-4: #0a1828;
+      --border: #1d3a57;
+      --border-2: #14283f;
+      --text: #dbe9f4;
+      --text-strong: #f0f7fc;
+      --text-2: #8fb3cc;
+      --text-3: #5f7f99;
+      --header-g1: #0a1f33;
+      --header-g2: #0d2b42;
+      --header-border: #1d3a57;
+      --card-hover: #16334f;
+      --card-active: #1b4264;
+      --scrollbar: #2a4a6a;
+      --date-day: #e3f0fa;
+      --meta-date: #9cc1da;
+      --link: #38bdf8;
+      --link-hover-bg: #0c4a6e;
       --nav: #fbbf24;
       --nav-border: #fbbf2444;
       --nav-hover-bg: #78350f;
+      --accent: #0ea5e9;
+      --accent-2: #38bdf8;
     }
+    /* 淺色「海風日光」 */
     body.light {
-      --bg: #eef1f5;
+      --bg: #eaf2f7;
       --bg-2: #ffffff;
-      --bg-3: #f8fafc;
-      --bg-4: #f1f5f9;
-      --border: #d8dee6;
-      --border-2: #e5e9ef;
-      --text: #1e293b;
-      --text-strong: #0f172a;
-      --text-2: #64748b;
-      --text-3: #94a3b8;
-      --header-g1: #ffffff;
-      --header-g2: #f1f5f9;
-      --header-border: #e2e8f0;
-      --card-hover: #e8f0fe;
-      --card-active: #dbeafe;
-      --scrollbar: #cbd5e1;
-      --date-day: #1e293b;
-      --meta-date: #475569;
-      --link: #2563eb;
-      --link-hover-bg: #dbeafe;
+      --bg-3: #f5fafd;
+      --bg-4: #e4eef5;
+      --border: #c9dbe8;
+      --border-2: #dde9f1;
+      --text: #16344d;
+      --text-strong: #0b2538;
+      --text-2: #4a7395;
+      --text-3: #7e9fb8;
+      --header-g1: #f4fafe;
+      --header-g2: #dfeef7;
+      --header-border: #c9dbe8;
+      --card-hover: #e0f2fe;
+      --card-active: #d2eafc;
+      --scrollbar: #b6cfdf;
+      --date-day: #14344e;
+      --meta-date: #3d6883;
+      --link: #0369a1;
+      --link-hover-bg: #d6ecfa;
       --nav: #b45309;
       --nav-border: #b4530944;
       --nav-hover-bg: #fef3c7;
+      --accent: #0284c7;
+      --accent-2: #0369a1;
     }
 
     body { font-family: 'Noto Sans TC', -apple-system, sans-serif; background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; transition: background-color .25s, color .25s; }
 
     /* ── Header ── */
     header {
+      position: relative;
       background: linear-gradient(135deg, var(--header-g1) 0%, var(--header-g2) 100%);
       padding: 10px 20px;
       display: flex; align-items: center; gap: 16px;
@@ -113,8 +119,39 @@
       flex-shrink: 0;
       transition: background .25s;
     }
+    /* 海港漸層飾條：港藍 → 燈塔青 → 夕陽橘 */
+    header::after {
+      content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px;
+      background: linear-gradient(90deg, #0ea5e9 0%, #22d3ee 45%, #f97316 100%);
+      opacity: .85; pointer-events: none;
+    }
     header h1 { font-size: 1.2rem; color: var(--text-strong); white-space: nowrap; }
-    header p  { font-size: 0.75rem; color: var(--text-3); }
+
+    /* ── 月份切換器 ── */
+    .month-switch { display: flex; align-items: center; gap: 6px; margin-top: 3px; }
+    .ms-btn {
+      background: transparent; border: 1px solid var(--border); color: var(--text-2);
+      border-radius: 6px; padding: 0 7px; cursor: pointer;
+      font-size: 0.62rem; line-height: 1.7;
+      transition: all 0.15s;
+    }
+    .ms-btn:hover { color: var(--text); border-color: var(--accent); }
+    .ms-btn:active { transform: scale(0.92); }
+    .ms-label { font-size: 0.75rem; color: var(--text-3); min-width: 70px; text-align: center; }
+
+    /* ── Toast 提示 ── */
+    #toast {
+      position: fixed; left: 50%; bottom: 30px;
+      transform: translateX(-50%) translateY(10px);
+      background: var(--bg-3); color: var(--text);
+      border: 1px solid var(--border); border-radius: 10px;
+      padding: 9px 18px; font-size: 0.78rem;
+      opacity: 0; pointer-events: none;
+      transition: all 0.25s; z-index: 2000;
+      box-shadow: 0 4px 18px rgba(0,0,0,.35);
+      white-space: nowrap;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
     /* ── 主題切換按鈕 ── */
     .icon-btn {
@@ -127,7 +164,7 @@
     .icon-btn:hover { color: var(--text); border-color: var(--text-3); transform: scale(1.06); }
     .icon-btn:active { transform: scale(0.94); }
     .badge {
-      background: #e84c3d; color: white;
+      background: linear-gradient(135deg, #f97316, #fb923c); color: white;
       padding: 3px 10px; border-radius: 12px;
       font-size: 0.75rem; font-weight: bold; white-space: nowrap;
     }
@@ -178,7 +215,7 @@
       border-radius: 8px; color: var(--text); font-size: 0.8rem;
       margin-bottom: 6px;
     }
-    .search-box:focus { outline: none; border-color: #3b82f6; }
+    .search-box:focus { outline: none; border-color: var(--accent); }
 
     /* ── Count bar（含已結束開關）── */
     .count-bar {
@@ -192,7 +229,7 @@
       cursor: pointer; color: var(--text-3); font-size: 0.68rem;
       user-select: none;
     }
-    .chk input { accent-color: #3b82f6; width: 13px; height: 13px; cursor: pointer; }
+    .chk input { accent-color: var(--accent); width: 13px; height: 13px; cursor: pointer; }
 
     /* ── Activity list ── */
     .activity-list {
@@ -212,9 +249,9 @@
       display: flex; gap: 9px; align-items: stretch;
       animation: cardIn 0.2s ease both;
     }
-    .activity-card:hover { background: var(--card-hover); border-color: #3b82f6; transform: translateY(-1px); }
+    .activity-card:hover { background: var(--card-hover); border-color: var(--accent); transform: translateY(-1px); }
     .activity-card:active { transform: scale(0.985); }
-    .activity-card.active { background: var(--card-active); border-color: #60a5fa; }
+    .activity-card.active { background: var(--card-active); border-color: var(--accent-2); }
     .card-body { flex: 1; min-width: 0; }
 
     /* ── 日曆方塊 ── */
@@ -225,7 +262,7 @@
       background: var(--bg-4); border: 1px solid var(--border);
       border-radius: 8px; padding: 4px 2px;
     }
-    .date-block.db-range { border-color: #3b82f655; }
+    .date-block.db-range { border-color: var(--accent); }
     .db-month { font-size: 0.6rem; color: var(--text-2); line-height: 1.1; }
     .db-day   { font-size: 1.3rem; font-weight: 800; color: var(--date-day); line-height: 1.15; }
     .db-wd    { font-size: 0.55rem; color: var(--text-3); line-height: 1.1; white-space: nowrap; }
@@ -259,11 +296,11 @@
     .empty-state .es-title { font-size: 0.88rem; color: var(--text-2); font-weight: 600; margin-bottom: 5px; }
     .empty-state .es-hint  { font-size: 0.72rem; margin-bottom: 14px; line-height: 1.6; }
     .es-btn {
-      background: #3b82f6; color: #fff; border: none;
+      background: var(--accent); color: #fff; border: none;
       padding: 7px 16px; border-radius: 8px; cursor: pointer;
       font-size: 0.76rem; transition: all 0.15s;
     }
-    .es-btn:hover { background: #2563eb; }
+    .es-btn:hover { filter: brightness(1.15); }
     .es-btn:active { transform: scale(0.95); }
 
     .cat-pill {
@@ -307,7 +344,7 @@
     @media (max-width: 700px) {
       header { padding: 6px 12px; }
       header h1 { font-size: 1rem; }
-      header p { font-size: 0.65rem; }
+      .ms-label { font-size: 0.68rem; min-width: 60px; }
 
       .container { flex-direction: column-reverse; }
       .sidebar {
@@ -342,8 +379,12 @@
 
 <header>
   <div>
-    <h1>🗺️ 高雄全區活動地圖</h1>
-    <p>2026年 6月1日 ～ 6月30日</p>
+    <h1>⚓ 高雄活動地圖</h1>
+    <div class="month-switch">
+      <button class="ms-btn" id="msPrev" title="上個月">◀</button>
+      <span class="ms-label" id="msLabel">2026年6月</span>
+      <button class="ms-btn" id="msNext" title="下個月">▶</button>
+    </div>
   </div>
   <span class="badge" id="badgeCount">載入中…</span>
   <button class="icon-btn" id="themeBtn" title="切換亮／暗模式">☀️</button>
@@ -405,6 +446,13 @@ let showExpired = false;   // 預設隱藏已結束活動
 let markerMap  = {};   // id → L.marker
 let activeId   = null;
 
+// ── 月份狀態（預設開最新月份）──
+let monthIdx     = MONTHS.length - 1;
+let currentMonth = MONTHS[monthIdx];
+function ACTS() { return currentMonth.activities; }
+function monthYear()  { return +currentMonth.key.slice(0, 4); }
+function monthFirstDay() { return new Date(monthYear(), +currentMonth.key.slice(5, 7) - 1, 1); }
+
 // ══════════════════════════════════════════════
 //  工具函式
 // ══════════════════════════════════════════════
@@ -417,7 +465,7 @@ function dayNum(dateStr) {
 function inWeek(a, week) {
   if (week === 'all') return true;
   if (a.start === '整月') return true;
-  const ranges = { '1':[1,7], '2':[8,14], '3':[15,21], '4':[22,30] };
+  const ranges = { '1':[1,7], '2':[8,14], '3':[15,21], '4':[22,31] };
   const [lo, hi] = ranges[week];
   const s = dayNum(a.start);
   const e = a.end.startsWith('0') ? dayNum(a.end) : 30;
@@ -425,7 +473,7 @@ function inWeek(a, week) {
 }
 
 function filtered() {
-  return ACTIVITIES.filter(a => {
+  return ACTS().filter(a => {
     if (!showExpired && isExpired(a)) return false;
     if (activeCat !== 'all' && a.cat !== activeCat) return false;
     if (!inWeek(a, activeWeek)) return false;
@@ -457,7 +505,7 @@ function dateRange(a) {
 const WEEKDAYS = ['日','一','二','三','四','五','六'];
 function parseDate(mmdd) {
   const m = /^(\d{2})\/(\d{2})$/.exec(mmdd);
-  return m ? new Date(2026, +m[1] - 1, +m[2]) : null;
+  return m ? new Date(monthYear(), +m[1] - 1, +m[2]) : null;
 }
 
 // ── 日曆方塊 HTML ──
@@ -485,7 +533,7 @@ function metaDateHTML(a) {
 // ── 判斷活動「今天是否進行中」──
 function isLive(a) {
   const today = new Date(); today.setHours(0, 0, 0, 0);
-  let s = a.start === '整月' ? new Date(2026, 5, 1) : parseDate(a.start);
+  let s = a.start === '整月' ? monthFirstDay() : parseDate(a.start);
   let e = parseDate(a.end);
   if (!s) return false;
   if (!e) e = s;
@@ -502,7 +550,7 @@ function isExpired(a) {
 
 // ── 計算各類別在「目前週次+搜尋」下的數量 ──
 function catCount(cat) {
-  return ACTIVITIES.filter(a => {
+  return ACTS().filter(a => {
     if (!showExpired && isExpired(a)) return false;
     if (cat !== 'all' && a.cat !== cat) return false;
     if (!inWeek(a, activeWeek)) return false;
@@ -646,7 +694,7 @@ function showVenuePopup(id) {
 
 function onCard(id) {
   activeId = id;
-  const a = ACTIVITIES.find(x => x.id === id);
+  const a = ACTS().find(x => x.id === id);
   if (!a) return;
 
   // 更新卡片高亮
@@ -707,11 +755,11 @@ function render() {
 function toISODate(mmdd) {
   // 把 "06/01" 轉成 "2026-06-01"；非日期格式（如「整月」）回傳 null
   const m = /^(\d{2})\/(\d{2})$/.exec(mmdd);
-  return m ? `2026-${m[1]}-${m[2]}` : null;
+  return m ? `${monthYear()}-${m[1]}-${m[2]}` : null;
 }
 
 function injectEventSchema() {
-  const itemList = ACTIVITIES.map((a, i) => {
+  const itemList = ACTS().map((a, i) => {
     const start = toISODate(a.start) || toISODate(a.end) || '2026-06-01';
     const end   = toISODate(a.end) || start;
     return {
@@ -743,8 +791,8 @@ function injectEventSchema() {
   const schema = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    "name": "高雄活動地圖 2026年6月",
-    "numberOfItems": ACTIVITIES.length,
+    "name": `高雄活動地圖 ${currentMonth.label}`,
+    "numberOfItems": ACTS().length,
     "itemListElement": itemList
   };
 
@@ -794,6 +842,47 @@ document.getElementById('showExpiredChk').addEventListener('change', e => {
   render();
 });
 
+// ── Toast 提示 ──
+let toastTimer = null;
+function showToast(msg) {
+  let t = document.getElementById('toast');
+  if (!t) { t = document.createElement('div'); t.id = 'toast'; document.body.appendChild(t); }
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ── 週次按鈕標籤跟著月份變 ──
+function updateWeekLabels() {
+  const m = +currentMonth.key.slice(5, 7);
+  const labels = {
+    '1': `第1週 ${m}/1–7`,
+    '2': `第2週 ${m}/8–14`,
+    '3': `第3週 ${m}/15–21`,
+    '4': `第4週 ${m}/22–${currentMonth.days}`,
+  };
+  document.querySelectorAll('#weekRow [data-week]').forEach(b => {
+    if (b.dataset.week !== 'all') b.textContent = labels[b.dataset.week];
+  });
+}
+
+// ── 月份切換 ──
+function switchMonth(dir) {
+  const ni = monthIdx + dir;
+  if (ni < 0)              { showToast('沒有更早的月份資料'); return; }
+  if (ni >= MONTHS.length) { showToast('該月份活動尚未更新，敬請期待 🙌'); return; }
+  monthIdx = ni;
+  currentMonth = MONTHS[monthIdx];
+  document.getElementById('msLabel').textContent = currentMonth.label;
+  activeId = null;
+  map.closePopup();
+  updateWeekLabels();
+  render();
+}
+document.getElementById('msPrev').addEventListener('click', () => switchMonth(-1));
+document.getElementById('msNext').addEventListener('click', () => switchMonth(1));
+
 window.addEventListener('load', function () {
   activeCat  = 'all';
   activeWeek = 'all';
@@ -802,9 +891,11 @@ window.addEventListener('load', function () {
   document.querySelector('#catRow [data-cat="all"]').classList.add('active');
   document.querySelectorAll('#weekRow [data-week]').forEach(b => b.classList.remove('active'));
   document.querySelector('#weekRow [data-week="all"]').classList.add('active');
+  document.getElementById('msLabel').textContent = currentMonth.label;
+  updateWeekLabels();
   render();
   injectEventSchema();
-  console.log('初始化完成：共', ACTIVITIES.length, '個活動，activeCat=', activeCat);
+  console.log('初始化完成：', currentMonth.label, '共', ACTS().length, '個活動');
 });
 </script>
 </body>

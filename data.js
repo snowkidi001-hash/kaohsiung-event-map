@@ -115,3 +115,13 @@ const CAT = {
   expo:        { label:"博覽會",      color:"#a855f7", icon:"🏢" },
   ongoing:     { label:"長期活動",    color:"#6b7280", icon:"🔁" },
 };
+
+// ══════════════════════════════════════════════
+//  月份註冊表 — 每月更新流程：
+//  1. 新增一個 const ACTIVITIES_YYYYMM = [ ...新月份活動... ]
+//  2. 在 MONTHS 加一行 { key, label, days, activities }
+//  （網站會自動以「最新月份」開啟，舊月份可用 ◀ 切回去看）
+// ══════════════════════════════════════════════
+const MONTHS = [
+  { key: "2026-06", label: "2026年6月", days: 30, activities: ACTIVITIES },
+];
