@@ -487,6 +487,34 @@ function buildList() {
 // ══════════════════════════════════════════════
 //  互動
 // ══════════════════════════════════════════════
+// 單一活動彈窗（點卡片時只顯示該活動，不混入同場館其他活動）
+function singlePopupHTML(a) {
+  const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${a.lat},${a.lng}`;
+  // 同場館（同座標）在目前篩選下還有幾個活動
+  const sameVenue = filtered().filter(x =>
+    x.lat.toFixed(4) === a.lat.toFixed(4) && x.lng.toFixed(4) === a.lng.toFixed(4));
+  const moreLink = sameVenue.length > 1
+    ? `<div style="margin-top:5px"><a href="javascript:void(0)" onclick="showVenuePopup(${a.id})" class="evt-link">📋 查看此場館全部 ${sameVenue.length} 個活動</a></div>`
+    : '';
+  return `
+    <div class="lf-popup" style="min-width:200px">
+      <h3>${a.venue}</h3>
+      <div class="sub">📍 ${a.district}</div>
+      <div class="evt">
+        <div class="evt-name">${isLive(a) ? '<span class="badge-live">進行中</span>' : ''}${CAT[a.cat].icon} ${a.name}</div>
+        <div class="evt-date">📅 ${dateRange(a)}${a.url ? ` <a href="${a.url}" target="_blank" rel="noopener" class="evt-link">詳情 🔗</a>` : ''}</div>
+      </div>
+      ${moreLink}
+      <div style="border-top:1px solid #2d3748;padding-top:6px;margin-top:4px;text-align:right"><a href="${navUrl}" target="_blank" rel="noopener" class="evt-nav">🧭 從這裡導航</a></div>
+    </div>`;
+}
+
+// 從單一活動彈窗切換到場館全部活動彈窗
+function showVenuePopup(id) {
+  map.closePopup();
+  if (markerMap[id]) markerMap[id].openPopup();
+}
+
 function onCard(id) {
   activeId = id;
   const a = ACTIVITIES.find(x => x.id === id);
@@ -498,9 +526,14 @@ function onCard(id) {
   const el = document.querySelector(`.activity-card[data-id="${id}"]`);
   if (el) el.scrollIntoView({ behavior:'smooth', block:'nearest' });
 
-  // 飛到地圖位置
+  // 飛到地圖位置，只顯示被點選的活動
   map.flyTo([a.lat, a.lng], 15, { duration: 0.7 });
-  setTimeout(() => { if (markerMap[id]) markerMap[id].openPopup(); }, 750);
+  setTimeout(() => {
+    L.popup({ maxWidth: 300, offset: [0, -18] })
+      .setLatLng([a.lat, a.lng])
+      .setContent(singlePopupHTML(a))
+      .openOn(map);
+  }, 750);
 }
 
 // 類別篩選
