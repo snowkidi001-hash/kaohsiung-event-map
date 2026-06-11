@@ -358,6 +358,7 @@
     .lf-popup .evt-date { font-size: 0.7rem; color: var(--link); }
     .lf-popup .evt-link { font-size: 0.68rem; color: var(--link); text-decoration: none; }
     .lf-popup .evt-link:hover { text-decoration: underline; }
+    .lf-popup .evt-extra { font-size: 0.7rem; color: var(--text-2); margin-top: 2px; }
     .lf-popup .evt-foot { border-top: 1px solid var(--border); padding-top: 6px; margin-top: 4px; text-align: right; }
     .card-link { display: inline-block; font-size: 0.68rem; color: var(--link); text-decoration: none; white-space: nowrap; padding: 1px 5px; border: 1px solid #2563eb44; border-radius: 4px; }
     .card-link:hover { background: var(--link-hover-bg); }
@@ -674,7 +675,7 @@ function buildMarkers() {
     const inner = acts.map(a => `
       <div class="evt">
         <div class="evt-name">${isLive(a) ? '<span class="badge-live">進行中</span>' : ''}${CAT[a.cat].icon} ${a.name}</div>
-        <div class="evt-date">📅 ${dateRange(a)}${a.url ? ` <a href="${a.url}" target="_blank" rel="noopener" class="evt-link">詳情 🔗</a>` : ''}</div>
+        <div class="evt-date">📅 ${dateRange(a)}${a.time ? `　🕐 ${a.time}` : ''}${a.price ? `　🎫 ${a.price}` : ''}${a.url ? ` <a href="${a.url}" target="_blank" rel="noopener" class="evt-link">詳情 🔗</a>` : ''}</div>
       </div>`).join('') + `<div class="evt-foot"><a href="${navUrl}" target="_blank" rel="noopener" class="evt-nav">🧭 從這裡導航</a></div>`;
 
     m.bindPopup(`
@@ -764,6 +765,8 @@ function singlePopupHTML(a) {
       <div class="evt">
         <div class="evt-name">${isLive(a) ? '<span class="badge-live">進行中</span>' : ''}${CAT[a.cat].icon} ${a.name}</div>
         <div class="evt-date">📅 ${dateRange(a)}${a.url ? ` <a href="${a.url}" target="_blank" rel="noopener" class="evt-link">詳情 🔗</a>` : ''}</div>
+        ${a.time ? `<div class="evt-extra">🕐 ${a.time}</div>` : ''}
+        ${a.price ? `<div class="evt-extra">🎫 ${a.price}</div>` : ''}
       </div>
       ${moreLink}
       <div class="evt-foot"><a href="${navUrl}" target="_blank" rel="noopener" class="evt-nav">🧭 從這裡導航</a></div>
