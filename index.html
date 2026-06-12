@@ -852,14 +852,34 @@ function toISODate(mmdd) {
   return m ? `${monthYear()}-${m[1]}-${m[2]}` : null;
 }
 
+// 從現有真實資料自動組出活動描述（GSC 建議的 description 欄位）
+function eventDescription(a) {
+  const when = a.start === '整月' ? `即日起至 ${a.end}` : dateRange(a);
+  const loc  = a.district === '全市' ? '高雄市各地' : `高雄市${a.district}${a.venue}`;
+  const kind = CAT[a.cat].label.endsWith('活動') ? CAT[a.cat].label : `${CAT[a.cat].label}活動`;
+  return `${a.name}：${when} 於${loc}舉行的${kind}。`;
+}
+
+// 票價轉 schema offers（有 price 欄位才產生；GSC 建議的 offers 欄位）
+function eventOffers(a) {
+  if (!a.price) return null;
+  if (a.price.includes('免費')) {
+    return { "@type": "Offer", "price": "0", "priceCurrency": "TWD",
+             "availability": "https://schema.org/InStock" };
+  }
+  const m = a.price.match(/\d+/);
+  return m ? { "@type": "Offer", "price": m[0], "priceCurrency": "TWD" } : null;
+}
+
 function injectEventSchema() {
   const itemList = ACTS().map((a, i) => {
     const start = toISODate(a.start) || toISODate(a.end) || '2026-06-01';
     const end   = toISODate(a.end) || start;
-    return {
+    const evt = {
       "@type": "Event",
       "position": i + 1,
       "name": a.name,
+      "description": eventDescription(a),
       "startDate": start,
       "endDate": end,
       "eventStatus": "https://schema.org/EventScheduled",
@@ -880,6 +900,9 @@ function injectEventSchema() {
         }
       }
     };
+    const offers = eventOffers(a);
+    if (offers) evt.offers = offers;
+    return evt;
   });
 
   const schema = {
